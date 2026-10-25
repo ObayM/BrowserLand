@@ -1,3 +1,5 @@
+#include "browser/History.h"
+#include "browser/System.h"
 #include "config/Config.h"
 #include "config/ConfigCheck.h"
 
@@ -78,6 +80,8 @@ int main(int argc, char *argv[])
     if (configDir == Config::defaultConfigDir())
         Config::installStarterConfig(configDir);
     Config config(configDir);
+    System system(System::defaultDataDir());
+    History history(system.dataDir());
 
     QQmlApplicationEngine engine;
 

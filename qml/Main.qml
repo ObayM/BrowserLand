@@ -5,6 +5,7 @@ import BrowserLand
 Window {
     id: window
     property url startUrl
+    property int visibilityBeforeFullScreen: Window.Windowed
     
     title: Browser.current && Browser.current.title ? Browser.current.title + " - BrowserLand" : "BrowserLand"
     width: 1200
@@ -48,7 +49,29 @@ Window {
     }
 
 
-     Window {
+    Item {
+        id: fullScreenHost
+
+        property WebEngineView view: null
+
+        anchors.fill: parent
+        z: 50
+        visible: !!view
+    }
+
+    Shortcut {
+        sequence: "Esc"
+        context: Qt.ApplicationShortcut
+        enabled: !!Browser.fullScreenView
+        onActivated: Browser.exitFullScreen()
+    }
+
+    NotificationToast {
+        anchors { right: parent.right; bottom: parent.bottom; margins: 16 }
+        z: 95
+    }
+
+    Window {
         id: devTools
         title: "DevTools - BrowserLand"
         width: 1000
@@ -63,10 +86,29 @@ Window {
     Connections {
         target: Browser
         function onDevToolsRequested() { devTools.visible = !devTools.visible }
+
+        function onFullScreenViewChanged() {
+            const view = Browser.fullScreenView
+            if (fullScreenHost.view && fullScreenHost.view.parent === fullScreenHost)
+                Browser.park(fullScreenHost.view)
+            fullScreenHost.view = view
+
+            if (view) {
+                window.visibilityBeforeFullScreen = window.visibility
+                view.parent = fullScreenHost
+                view.anchors.fill = fullScreenHost
+                view.visible = true
+                window.showFullScreen()
+            } else if (window.visibility === Window.FullScreen) {
+                window.visibility = window.visibilityBeforeFullScreen
+            }
+        }
     }
+
+    onClosing: Browser.saveSession()
 
     Component.onCompleted: {
         Browser.pool = pool
-        Browser.newTab(startUrl.toString() !== "" ? startUrl.toString() : undefined)
+        Browser.start(startUrl.toString())
     }
 }

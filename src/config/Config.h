@@ -19,6 +19,7 @@ class Config : public QQmlPropertyMap
     Q_PROPERTY(QStringList errors READ errors NOTIFY reloaded)
     Q_PROPERTY(QVariantList binds READ binds NOTIFY reloaded)
     Q_PROPERTY(QVariantList widgets READ widgets NOTIFY reloaded)
+    Q_PROPERTY(QVariantList siteRules READ siteRules NOTIFY reloaded)
     Q_PROPERTY(QString configDir READ configDir CONSTANT)
     Q_PROPERTY(QString configFile READ configFile CONSTANT)
     Q_PROPERTY(QUrl shellUrl READ shellUrl NOTIFY reloaded)
@@ -37,6 +38,7 @@ public:
     QStringList errors() const;
     QVariantList binds() const;
     QVariantList widgets() const;
+    QVariantList siteRules() const;
     QUrl shellUrl() const;
     QString configDir() const;
     QString configFile() const;
@@ -57,6 +59,7 @@ private:
     QVariantMap m_values;
     QList<Keybind> m_binds;
     QList<WidgetDecl> m_widgets;
+    QVariantList m_siteRules;
     QList<ConfigError> m_errors;
     QHash<QString, QQmlPropertyMap *> m_sections;
     ConfigWatcher *m_watcher;

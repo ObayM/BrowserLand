@@ -47,6 +47,8 @@ Rectangle {
                 Layout.rightMargin: 8
             }
 
+            DownloadsButton {}
+
             WidgetSlot { name: "toolbar-right" }
         }
 

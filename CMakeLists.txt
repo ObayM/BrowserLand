@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Qml Quick WebEngineQuick)
+find_package(Qt6 6.9 REQUIRED COMPONENTS Core Gui Qml Quick Sql WebEngineQuick)
 qt_standard_project_setup()
 
 add_library(browserland_config STATIC
@@ -34,6 +34,10 @@ qt_add_qml_module(browserland
         src/config/Config.h
         src/config/ConfigWatcher.cpp
         src/config/ConfigWatcher.h
+        src/browser/History.cpp
+        src/browser/History.h
+        src/browser/System.cpp
+        src/browser/System.h
     QML_FILES
         qml/Main.qml
         qml/DefaultShell.qml
@@ -44,15 +48,22 @@ qt_add_qml_module(browserland
         qml/WidgetSlot.qml
         qml/UserQml.qml
         qml/ErrorBanner.qml
+        qml/Popover.qml
+        qml/TextButton.qml
+        qml/FindBar.qml
+        qml/PermissionPrompt.qml
+        qml/DownloadsButton.qml
+        qml/NotificationToast.qml
         qml/singletons/Browser.qml
 )
 
-target_include_directories(browserland PRIVATE src/config)
+target_include_directories(browserland PRIVATE src/config src/browser)
 
 target_link_libraries(browserland PRIVATE
     browserland_config
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::Sql
     Qt6::WebEngineQuick
 )

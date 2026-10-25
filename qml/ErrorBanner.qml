@@ -5,11 +5,11 @@ import BrowserLand
 Rectangle {
     id: banner
 
-    readonly property var error: Browsers.errors
+    readonly property var errors: Browser.errors
     readonly property int maxShown: 5
     property bool dismissed: false
 
-    visible: Config.errors.length > 0 && !dismissed
+    visible: errors.length > 0 && !dismissed
     height: visible ? column.implicitHeight + 16: 0
     color: "#b22f28"
 

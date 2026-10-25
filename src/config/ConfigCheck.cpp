@@ -86,6 +86,15 @@ int checkConfig(const QString &file, QTextStream &out)
 
     printTable(out, rows);
 
+    out << "\nSite rules\n";
+
+    rows.clear();
+
+    for (const SiteRule &rule : config.siteRules)
+        rows.append({rule.site, rule.rule, rule.arg});
+
+    printTable(out, rows);
+
     out << '\n';
     if (config.errors.isEmpty()) {
         out << "OK: no errors.\n";

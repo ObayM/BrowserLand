@@ -62,7 +62,7 @@ Rectangle {
                         rightMargin: 4
                         verticalCenter: parent.verticalCenter
                     }
-                    text: tab.modelData.title || tab.modelData.url.toString()
+                    text: tab.modelData.title || tab.modelData.pendingTitle || tab.modelData.url.toString() || tab.modelData.pendingUrl
                     color: Config.appearance.foreground
                     opacity: tab.active ? 1 : 0.65
                     elide: Text.ElideRight

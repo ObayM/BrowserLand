@@ -205,6 +205,11 @@ void ConfigParser::parseText(const QString &text, const QString &file)
                 parseWidget(value, file, lineNo);
                 continue;
             }
+
+            if (key == u"siterule") {
+                parseSiteRule(value, file, lineNo);
+                continue;
+            }
         }
 
         m_result.values.insert((sections + QStringList{key}).join(u'.'), typedValue(value));
@@ -233,7 +238,7 @@ void ConfigParser::parseBind(const QString &value, const QString &file, int line
         return;
     }
 
-    const QString args = parts.mid(3).join(QStringLiteral(", "));
+    const QString args = value.section(u',', 3).trimmed();
 
     m_result.binds.append({sequence, parts.at(2), args, file, line});
 }
@@ -255,6 +260,51 @@ void ConfigParser::parseWidget(const QString &value, const QString &file, int li
     }
 
     m_result.widgets.append({parts.at(0), path, parts.at(2)});
+}
+
+void ConfigParser::parseSiteRule(const QString &value, const QString &file, int line)
+{
+    const QStringList parts = splitArgs(value);
+
+    if (parts.size() != 2 || parts.contains(QString())) {
+        addError(file, line, QStringLiteral("siterule needs 'rule, site', got '%1'").arg(value));
+        return;
+    }
+
+    const qsizetype space = parts.at(0).indexOf(u' ');
+    const QString rule = parts.at(0).left(space).toLower();
+    QString arg = space < 0 ? QString() : parts.at(0).mid(space + 1).trimmed();
+    const QString site = parts.at(1).toLower();
+
+    static const QRegularExpression siteRe(QStringLiteral("^[a-z0-9*.-]+$"));
+    if (!siteRe.match(site).hasMatch()) {
+        addError(file, line, QStringLiteral("siterule: '%1' is not a site, use something like github.com or *.github.com").arg(parts.at(1)));
+        return;
+    }
+
+    if (rule == u"zoom") {
+        bool ok = false;
+        const double zoom = arg.toDouble(&ok);
+        if (!ok || zoom < 0.25 || zoom > 5) {
+            addError(file, line, QStringLiteral("siterule: zoom needs a number between 0.25 and 5, got '%1'").arg(arg));
+            return;
+        }
+    } else if (rule == u"css" || rule == u"js") {
+        if (arg.isEmpty()) {
+            addError(file, line, QStringLiteral("siterule: %1 needs a file").arg(rule));
+            return;
+        }
+        arg = resolvePath(arg, file);
+        if (!QFileInfo::exists(arg)) {
+            addError(file, line, QStringLiteral("siterule file not found: %1").arg(arg));
+            return;
+        }
+    } else {
+        addError(file, line, QStringLiteral("unknown siterule '%1' (use zoom, css or js)").arg(rule));
+        return;
+    }
+
+    m_result.siteRules.append({rule, arg, site, file, line});
 }
 
 
@@ -392,4 +442,13 @@ QString ConfigParser::keySequence(const QString &mods, const QString &key, QStri
         return fail(QStringLiteral("unknown key '%1'").arg(k));
 
     return text;
+}
+
+// github.com also matches its subdomains, *.github.com only the subdomains
+QString ConfigParser::hostRegex(const QString &site)
+{
+    QString re = QRegularExpression::escape(site).replace(QStringLiteral("\\*"), QStringLiteral(".*"));
+    if (!site.contains(u'*'))
+        re.prepend(QStringLiteral("(.*\\.)?"));
+    return u'^' + re + u'$';
 }

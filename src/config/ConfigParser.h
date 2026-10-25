@@ -36,12 +36,23 @@ struct WidgetDecl
     QString slot;
 };
 
+struct SiteRule
+{
+    QString rule;
+    QString arg;
+    QString site;
+
+    QString file;
+    int line = 0;
+};
+
 struct ParsedConfig
 {
     QVariantMap values;
     QList<Keybind> binds;
 
     QList<WidgetDecl> widgets;
+    QList<SiteRule> siteRules;
     QList<ConfigError> errors;
     QStringList files;
 };
@@ -55,6 +66,7 @@ private:
 
     void parseBind(const QString &value, const QString &file, int line);
     void parseWidget(const QString &value, const QString &file, int line);
+    void parseSiteRule(const QString &value, const QString &file, int line);
 
     QString substitute(const QString &value, const QString &file, int line);
     void addError(const QString &file, int line, const QString &message);
@@ -70,6 +82,7 @@ public:
 
     static QVariant typedValue(const QString &raw);
     static QString keySequence(const QString &mods, const QString &key, QString *error = nullptr);
+    static QString hostRegex(const QString &site);
 
 };
 

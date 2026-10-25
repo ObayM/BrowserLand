@@ -127,11 +127,16 @@ QVariantList Config::widgets() const
         list.append(QVariantMap{
             {QStringLiteral("name"), widget.name},
             {QStringLiteral("file"), widget.file},
-            {QStringLiteral("url"), QUrl::versionedUrl(widget.file)},
+            {QStringLiteral("url"), versionedUrl(widget.file)},
             {QStringLiteral("slot"), widget.slot},
         });
     }
     return list;
+}
+
+QVariantList Config::siteRules() const
+{
+    return m_siteRules;
 }
 
 QUrl Config::shellUrl() const
@@ -189,6 +194,29 @@ void Config::reload()
     
     for (const WidgetDecl &widget : std::as_const(m_widgets))
         watched.append(widget.file);
+
+    m_siteRules.clear();
+    for (const SiteRule &rule : user.siteRules) {
+        QVariantMap map{
+            {QStringLiteral("rule"), rule.rule},
+            {QStringLiteral("site"), rule.site},
+            {QStringLiteral("host"), ConfigParser::hostRegex(rule.site)},
+        };
+
+        if (rule.rule == u"zoom") {
+            map.insert(QStringLiteral("zoom"), rule.arg.toDouble());
+        } else {
+            QFile source(rule.arg);
+            if (!source.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                m_errors.append({rule.file, rule.line, QStringLiteral("cannot open %1").arg(rule.arg)});
+                continue;
+            }
+            map.insert(QStringLiteral("file"), rule.arg);
+            map.insert(QStringLiteral("source"), QString::fromUtf8(source.readAll()));
+            watched.append(rule.arg);
+        }
+        m_siteRules.append(map);
+    }
     
     watched.append(QDir(m_configDir).filePath(QStringLiteral("shell.qml")));
 

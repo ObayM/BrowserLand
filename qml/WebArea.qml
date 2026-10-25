@@ -11,7 +11,7 @@ Item {
         const view = Browser.current
         if (shown && shown !== view && shown.parent === area)
             Browser.park(shown)
-        if (view) {
+        if (view && view !== Browser.fullScreenView) {
             view.parent = area
             view.anchors.fill = area
             view.visible = true
@@ -22,6 +22,17 @@ Item {
     Connections {
         target: Browser
         function onCurrentChanged() { area.showCurrent() }
+        function onFullScreenViewChanged() { area.showCurrent() }
+    }
+
+    PermissionPrompt {
+        anchors { top: parent.top; topMargin: 10; horizontalCenter: parent.horizontalCenter }
+        z: 2
+    }
+
+    FindBar {
+        anchors { top: parent.top; right: parent.right; margins: 10 }
+        z: 2
     }
 
     Component.onCompleted: showCurrent()
