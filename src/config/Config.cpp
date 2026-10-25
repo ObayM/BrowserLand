@@ -17,6 +17,14 @@ namespace {
 
 Config *s_instance = nullptr;
 
+class SectionMap : public QQmlPropertyMap
+{
+public:
+    explicit SectionMap(QObject *parent)
+        : QQmlPropertyMap(this, parent)
+    {
+    }
+};
 
 bool isReservedName(const QMetaObject &meta, const QString &name)
 {
@@ -240,7 +248,7 @@ QQmlPropertyMap *Config::sectionMap(const QStringList &path)
         const QString key = path.mid(0, i + 1).join(u'.');
         QQmlPropertyMap *child = m_sections.value(key);
         if (!child) {
-            child = new QQmlPropertyMap(this);
+            child = new SectionMap(this);
             m_sections.insert(key, child);
         }
 
