@@ -86,7 +86,7 @@ bool System::writeJson(const QString &name, const QVariant &value) const
 
 QString System::downloadDir(const QString &configured) const
 {
-    QString dir = expandHome(configured)
+    QString dir = expandHome(configured);
     if (dir.isEmpty())
         dir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
     
@@ -117,28 +117,28 @@ bool System::exec(const QString &command) const
 
 QStringList System::images(const QString &path) const 
 {
-    const QString expanded = expandHome(path)
+    const QString expanded = expandHome(path);
     if (expanded.isEmpty())
         return {};
 
-    const QFileInfo inf(expanded)
-    if (info.isFile)
+    const QFileInfo info(expanded);
+    if (info.isFile())
         return{
-            QUrl::fromLocalfile(info.info.absoluteFilePath()).toString()
+            QUrl::fromLocalFile(info.absoluteFilePath()).toString()
         };
     
     const QStringList filters = {
-        QStringLiteral('*.jpg'),
-        QStringLiteral('*.jpeg'),
-        QStringLiteral('*.png'),
-        QStringLiteral('*.webp')
+        QStringLiteral("*.jpg"),
+        QStringLiteral("*.jpeg"),
+        QStringLiteral("*.png"),
+        QStringLiteral("*.webp")
+    };
+    QStringList urls;
 
-        QStringList urls;
+    for (const QFileInfo &file : QDir(expanded).entryInfoList(filters, QDir::Files))
 
-        for (const QFileInfo &file : QDir(expanded).entryInfoList(filters, QDir::Files))
-        
-            urls.append(QUrl::fromLocalFile(file.absoluteFilePath()).toString());
-        
-        return urls;
-    }
+        urls.append(QUrl::fromLocalFile(file.absoluteFilePath()).toString());
+    
+    return urls;
+
 }

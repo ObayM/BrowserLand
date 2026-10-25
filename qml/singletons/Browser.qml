@@ -495,11 +495,12 @@ ${rule.source}
                 browser.scheduleSave()
             }
             onTitleChanged: browser.scheduleSave()
+            onIconChanged: History.setIcon(url, icon)
 
             onLoadingChanged: info => {
                 if (info.status === WebEngineLoadingInfo.LoadSucceededStatus) {
                     view.thumbnailTimer.restart()
-                    History.add(info.url, view.title)
+                    History.add(info.url, view.title, view.icon)
                 }
             }
 

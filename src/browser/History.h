@@ -20,7 +20,10 @@ public:
 
     static History *create(QQmlEngine *qmlEngine, QJSEngine *jsEngine);
 
-    Q_INVOKABLE void add(const QUrl &url, const QString &title);
+    Q_INVOKABLE void add(const QUrl &url, const QString &title, const QUrl &icon);
+    Q_INVOKABLE void setIcon(const QUrl &url, const QUrl &icon);
+    Q_INVOKABLE QVariantList top(int limit = 8) const;
+    Q_INVOKABLE int visitedToday() const;
     Q_INVOKABLE QVariantList search(const QString &text, int limit = 8) const;
     Q_INVOKABLE void clear();
 
