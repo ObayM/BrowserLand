@@ -6,6 +6,7 @@ import QtQuick.Effects
 Rectangle {
     id: strip
 
+    signal wheelSwitched(var view)
     readonly property int maxTabWidth: 240
     readonly property int minTabWidth: 48
     readonly property int inset: 4
@@ -176,18 +177,31 @@ Rectangle {
 
         anchors.fill: parent
         acceptedButtons: Qt.NoButton
+
         onWheel: wheel => {
-            pending -= wheel.angleDelta.y !== 0 ? wheel.angleDelta.y : wheel.angleDelta.x
+            if (detent.running)
+                return
             
-            while (pending >= 120) {
-                pending -= 120
-                Browser.selectTab(Browser.currentIndex + 1)
-            }
+            const step = -(wheel.angleDelta.y !== 0 ? wheel.angleDelta.y : wheel.angleDelta.x)
+            pending = Math.sign(step) === Math.sign(pending) ? pending + step : step            
             
-            while (pending <= -120) {
-                pending += 120
-                Browser.selectTab(Browser.currentIndex - 1)
-            }
+            if (Math.abs(pending) < 80)
+                return
+            
+            const index = Browser.currentIndex + Math.sign(pending)
+            pending = 0
+
+            if (index < 0 || index >= Browser.tabs.length)
+                return
+            
+            Browser.selectTab(index)
+            detent.restart()
+            strip.wheelSwitched(Browser.current)
+        }
+
+        Timer {
+            id: detent
+            interval: 77
         }
     }
 
@@ -292,6 +306,24 @@ Rectangle {
             }
 
             NumberAnimation {
+                id: bump
+                target: body
+                property: "scale"
+                from: 0.95
+                to: 1
+                duration: Theme.duration * 1.4
+                easing.type: Easing.OutBack
+            }
+
+            Connections {
+                target: strip
+                function onWheelSwitched(view) {
+                    if (view === tab.view)
+                        bump.restart()
+                }
+            }
+
+            NumberAnimation {
                 id: snapBack
                 target: tab
                 property: "settleOffset"
@@ -318,6 +350,7 @@ Rectangle {
                 x: tab.dragged ? strip.dragLeft - tab.x : tab.settleOffset
                 width: tab.width
                 height: tab.height
+                transformOrigin: Item.Bottom
 
                 Shape {
                     anchors.fill: parent
