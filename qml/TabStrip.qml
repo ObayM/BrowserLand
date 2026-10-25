@@ -170,16 +170,19 @@ Rectangle {
         }
     }
 
-    WheelHandler {
+    MouseArea {
         property real pending: 0
 
-        target: null
-        onWheel: event => {
-            pending -= event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x
+        anchors.fill: parent
+        acceptedButtons: Qt.NoButton
+        onWheel: wheel => {
+            pending -= wheel.angleDelta.y !== 0 ? wheel.angleDelta.y : wheel.angleDelta.x
+            
             while (pending >= 120) {
                 pending -= 120
                 Browser.selectTab(Browser.currentIndex + 1)
             }
+            
             while (pending <= -120) {
                 pending += 120
                 Browser.selectTab(Browser.currentIndex - 1)
@@ -529,7 +532,7 @@ Rectangle {
                 maximumLineCount: 2
                 elide: Text.ElideRight
             }
-            
+
             UiText {
                 width: parent.width
                 text: card.host
