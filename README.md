@@ -15,3 +15,15 @@ This would be using:
 - C++ as the backend
 - QML/Qt6 for the UI
 - QtWebEngine (Chromium)
+
+
+## Development
+
+Compile the code using:
+```
+cmake -S . -B build -G Ninja
+cmake --build build
+```
+
+Launch the browser:
+`./build/browserland` or if you want to use a config `./build/browserland --config-dir examples`
