@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import BrowserLand
+import QtQuick.Effects
 
 Rectangle {
     id: strip
@@ -137,7 +138,7 @@ Rectangle {
 
     Timer {
         id: cardDelay
-        interval: 500
+        interval: Math.round(300 + 500 * Math.min(1, strip.tabWidth / strip.maxTabWidth))
         onTriggered: card.shown = true
     }
 
@@ -484,61 +485,87 @@ Rectangle {
         anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
     }
 
-    Rectangle {
+     Rectangle {
         id: card
 
         property bool shown: false
-        readonly property string title: strip.hoverTab ? strip.hoverTab.title : ""
-        readonly property string host: strip.hoverTab ? Browser.hostOf(strip.hoverTab.url) : ""
+        readonly property Item tab: strip.hoverTab
+        readonly property var thumbnail: tab && tab.view ? tab.view.thumbnail : null
 
         function place() {
-            if (!strip.hoverTab || !parent)
+            if (!tab || !parent)
                 return
-            const below = strip.hoverTab.mapToItem(parent, strip.inset, strip.hoverTab.height + 4)
+            const below = tab.mapToItem(parent, -2, tab.height)
             x = Math.max(4, Math.min(below.x, parent.width - width - 4))
             y = below.y
         }
 
         parent: strip.Window.contentItem
-
         z: 95
-        width: 260
-        height: cardColumn.implicitHeight + 20
-        radius: Theme.radius
-        color: Theme.overlay
-        border.width: 1
-        border.color: Theme.border
+        width: 250
+        height: header.height + (preview.visible ? preview.height : 0) + footer.height
+        radius: 12
+        color: Theme.dark ? Qt.tint(Theme.background, Qt.rgba(0, 0, 0, 0.14)) : Theme.background
         opacity: shown ? 1 : 0
         visible: opacity > 0
 
-        Behavior on opacity { NumberAnimation { duration: Theme.duration } }
+        transform: Translate {
+            y: card.shown ? 0 : 3
+
+            Behavior on y { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        }
+
+        Behavior on opacity { NumberAnimation { duration: 150 } }
         Behavior on x {
             enabled: card.visible
-            NumberAnimation { duration: Theme.duration; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
         }
 
         onShownChanged: if (shown) place()
 
-        Column {
-            id: cardColumn
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
-            spacing: 2
+        RectangularShadow {
+            anchors.fill: parent
+            z: -1
+            radius: parent.radius
+            blur: 16
+            offset.y: 2
+            color: Qt.rgba(0, 0, 0, Theme.dark ? 0.4 : 0.15)
+        }
+  UiText {
+            id: header
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            padding: 12
+            text: card.tab ? card.tab.title : ""
+            font.weight: Font.Medium
+            wrapMode: Text.Wrap
+            maximumLineCount: 2
+            elide: Text.ElideRight
+            lineHeightMode: Text.FixedHeight
+            lineHeight: Math.round(Theme.fontSize * 1.45)
+        }
+
+        Image {
+            id: preview
+            anchors { left: parent.left; right: parent.right; top: header.bottom }
+            height: Math.round(width * 9 / 16)
+            source: card.thumbnail ? card.thumbnail.url : ""
+            visible: !!card.thumbnail && !card.tab.active
+            fillMode: Image.PreserveAspectCrop
+            verticalAlignment: Image.AlignTop
+        }
+
+        Rectangle {
+            id: footer
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: 40
+            bottomLeftRadius: card.radius
+            bottomRightRadius: card.radius
+            color: Qt.tint(card.color, Theme.alpha(Theme.foreground, 0.05))
 
             UiText {
-                width: parent.width
-                text: card.title
-                font.bold: true
-                wrapMode: Text.Wrap
-                maximumLineCount: 2
-                elide: Text.ElideRight
-            }
-
-            UiText {
-                width: parent.width
-                text: card.host
-                visible: text !== ""
-                color: Theme.muted
-                font.pixelSize: Theme.fontSizeSmall
+                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 12 }
+                text: card.tab ? Browser.hostOf(card.tab.url) || card.tab.url : ""
+                color: Theme.alpha(Theme.foreground, 0.75)
                 elide: Text.ElideRight
             }
         }

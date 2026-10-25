@@ -159,7 +159,6 @@ QtObject {
             currentIndex = index
     }
 
-    // restored tabs only start loading once you look at them
     function loadPending() {
         if (current && current.pendingUrl !== "") {
             current.url = current.pendingUrl
@@ -172,6 +171,8 @@ QtObject {
             fullScreenView.triggerWebAction(WebEngineView.ExitFullScreen)
             fullScreenView = null
         }
+        if (current) current.thumbnailTimer.restart()
+
         findResult = { numberOfMatches: 0, activeMatch: 0 }
         Qt.callLater(loadPending)
     }
@@ -233,7 +234,7 @@ QtObject {
             script.runsOnSubFrames = false
 
             if (rule.rule === "css") {
-                // a constructed sheet isn't blocked by the page's Content-Security-Policy like a <style> would be
+
                 script.injectionPoint = WebEngineScript.DocumentCreation
                 script.worldId = WebEngineScript.ApplicationWorld
                 script.sourceCode = `(function () {
@@ -443,10 +444,25 @@ ${rule.source}
         WebEngineView {
             id: view
 
+            property var thumbnail: null
+            property Timer thumbnailTimer: Timer {
+                interval: 800
+                onTriggered: view.captureThumbnail()
+            }
+
             property string pendingUrl: ""
             property string pendingTitle: ""
             property string ruleHost: ""
             property real ruleZoom: 0
+
+            function captureThumbnail() {
+                if (view !== browser.current || width <= 0 || height <= 0)
+                    return
+                
+                grabToImage(result => view.thumbnail = result, Qt.size(400, Math.round(400 * height / width)))
+            }
+
+            onScrollPositionChanged: thumbnailTimer.restart()
 
             function applySiteZoom(force) {
                 const host = browser.hostOf(url)
@@ -475,6 +491,7 @@ ${rule.source}
 
             onLoadingChanged: info => {
                 if (info.status === WebEngineLoadingInfo.LoadSucceededStatus)
+                    view.thumbnailTimer.restart()
                     History.add(info.url, view.title)
             }
 
