@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QVariant>
 #include <QtQml/qqmlregistration.h>
+#include <QStringList>
 
 class QJSEngine;
 class QQmlEngine;
@@ -28,6 +29,7 @@ public:
     Q_INVOKABLE bool writeJson(const QString &name, const QVariant &value) const;
     Q_INVOKABLE QString downloadDir(const QString &configured) const;
     Q_INVOKABLE bool exec(const QString &command) const;
+    Q_INVOKABLE QStringList images(const QString &path) const;
 
 private:
     QString m_dataDir;

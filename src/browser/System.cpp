@@ -1,5 +1,6 @@
 #include "browser/System.h"
-
+#include <QFileInfo>
+#include <QUrl> 
 #include <QDebug>
 #include <QDir>
 #include <QFile>
@@ -13,6 +14,17 @@
 namespace {
 
 System *s_instance = nullptr;
+
+QString expandHome(QString path)
+{
+    path = path.trimmed();
+
+    if (path == u"~" || path.startsWith(u"~/"))
+        path = QDir::homePath() + path.mid(1);
+    
+    return path;
+}
+
 
 }
 
@@ -74,9 +86,7 @@ bool System::writeJson(const QString &name, const QVariant &value) const
 
 QString System::downloadDir(const QString &configured) const
 {
-    QString dir = configured.trimmed();
-    if (dir == u"~" || dir.startsWith(u"~/"))
-        dir = QDir::homePath() + dir.mid(1);
+    QString dir = expandHome(configured)
     if (dir.isEmpty())
         dir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
     
@@ -103,4 +113,32 @@ bool System::exec(const QString &command) const
     if (!started)
         qWarning().noquote() << "browserland: could not run" << command;
     return started;
+}
+
+QStringList System::images(const QString &path) const 
+{
+    const QString expanded = expandHome(path)
+    if (expanded.isEmpty())
+        return {};
+
+    const QFileInfo inf(expanded)
+    if (info.isFile)
+        return{
+            QUrl::fromLocalfile(info.info.absoluteFilePath()).toString()
+        };
+    
+    const QStringList filters = {
+        QStringLiteral('*.jpg'),
+        QStringLiteral('*.jpeg'),
+        QStringLiteral('*.png'),
+        QStringLiteral('*.webp')
+
+        QStringList urls;
+
+        for (const QFileInfo &file : QDir(expanded).entryInfoList(filters, QDir::Files))
+        
+            urls.append(QUrl::fromLocalFile(file.absoluteFilePath()).toString());
+        
+        return urls;
+    }
 }
