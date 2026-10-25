@@ -23,6 +23,7 @@ qt_add_resources(browserland_config defaults
 )
 
 qt_add_executable(browserland src/main.cpp)
+set_source_files_properties(qml/singletons/Browser.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_qml_module(browserland
     URI BrowserLand
@@ -35,7 +36,15 @@ qt_add_qml_module(browserland
         src/config/ConfigWatcher.h
     QML_FILES
         qml/Main.qml
+        qml/DefaultShell.qml
+        qml/TabStrip.qml
+        qml/AddressBar.qml
+        qml/IconButton.qml
+        qml/WebArea.qml
+        qml/WidgetSlot.qml
+        qml/UserQml.qml
         qml/ErrorBanner.qml
+        qml/singletons/Browser.qml
 )
 
 target_include_directories(browserland PRIVATE src/config)

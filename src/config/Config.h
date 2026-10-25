@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config/ConfigParser.h"
+#include <QUrl>
 
 #include <QHash>
 #include <QQmlPropertyMap>
@@ -20,6 +21,7 @@ class Config : public QQmlPropertyMap
     Q_PROPERTY(QVariantList widgets READ widgets NOTIFY reloaded)
     Q_PROPERTY(QString configDir READ configDir CONSTANT)
     Q_PROPERTY(QString configFile READ configFile CONSTANT)
+    Q_PROPERTY(QUrl shellUrl READ shellUrl NOTIFY reloaded)
 
 public:
     explicit Config(const QString &configDir, QObject *parent = nullptr);
@@ -35,6 +37,7 @@ public:
     QStringList errors() const;
     QVariantList binds() const;
     QVariantList widgets() const;
+    QUrl shellUrl() const;
     QString configDir() const;
     QString configFile() const;
 

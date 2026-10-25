@@ -1,4 +1,5 @@
 #include "config/Config.h"
+#include <QDateTime>
 
 #include "config/ConfigWatcher.h"
 
@@ -36,6 +37,13 @@ bool isReservedName(const QMetaObject &meta, const QString &name)
             return true;
     }
     return name == u"keys";
+}
+
+QUrl versionedUrl(const QString &path)
+{
+    QUrl url = QUrl::fromLocalFile(path);
+    url.setQuery(QStringLiteral("v=%1").arg(QFileInfo(path).lastModified().toMSecsSinceEpoch()));
+    return url;
 }
 
 }
@@ -119,12 +127,19 @@ QVariantList Config::widgets() const
         list.append(QVariantMap{
             {QStringLiteral("name"), widget.name},
             {QStringLiteral("file"), widget.file},
-            {QStringLiteral("url"), QUrl::fromLocalFile(widget.file)},
+            {QStringLiteral("url"), QUrl::versionedUrl(widget.file)},
             {QStringLiteral("slot"), widget.slot},
         });
     }
     return list;
 }
+
+QUrl Config::shellUrl() const
+{
+    const QString path = QDir(m_configDir).filePath(QStringLiteral("shell.qml"));
+    return QFileInfo::exists(path) ? versionedUrl(path) : QUrl();
+}
+
 
 QString Config::configDir() const
 {
@@ -169,7 +184,15 @@ void Config::reload()
     }
 
     m_widgets = user.widgets;
-    m_watcher->watch(m_configDir, user.files);
+
+    QStringList watched = user.files;
+    
+    for (const WidgetDecl &widget : std::as_const(m_widgets))
+        watched.append(widget.file);
+    
+    watched.append(QDir(m_configDir).filePath(QStringLiteral("shell.qml")));
+
+    m_watcher->watch(m_configDir, watched);
 
     if (!hasUserFile)
         qInfo().noquote() << "browserland: no config at" << configFile() << "- using built-in defaults";
