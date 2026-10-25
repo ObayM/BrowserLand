@@ -11,7 +11,7 @@ Window {
     width: 1200
     height: 800
     visible: true
-    color: Config.appearance.background
+    color: Theme.background
 
     Item {
         id: pool

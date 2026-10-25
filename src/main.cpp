@@ -9,6 +9,7 @@
 #include <QGuiApplication>
 #include <QLoggingCategory>
 #include <QQmlApplicationEngine>
+#include <QQuickWindow>
 #include <QTextStream>
 #include <QUrl>
 #include <QtWebEngineQuick/qtwebenginequickglobal.h>
@@ -133,6 +134,9 @@ int main(int argc, char *argv[])
     Config config(configDir);
     System system(System::defaultDataDir());
     History history(system.dataDir());
+
+    // Qt Quick's own text rendering looks soft at UI sizes next to native apps
+    QQuickWindow::setTextRenderType(QQuickWindow::NativeTextRendering);
 
     QQmlApplicationEngine engine;
 

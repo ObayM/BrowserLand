@@ -6,7 +6,7 @@ import BrowserLand
 // it replaces this one and reloads every time you save it :)
 
 Rectangle {
-    color: Config.appearance.background
+    color: Theme.background
 
     ColumnLayout {
         anchors.fill: parent
@@ -18,26 +18,29 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 42
+            Layout.preferredHeight: 44
             Layout.leftMargin: 6
-            Layout.rightMargin: 10
+            Layout.rightMargin: 8
             spacing: 4
 
             WidgetSlot { name: "toolbar-left" }
 
             IconButton {
-                text: "←"
+                icon: "arrow-left"
+                tip: "Back"
                 enabled: !!Browser.current && Browser.current.canGoBack
                 onClicked: Browser.run("back")
             }
             IconButton {
-                text: "→"
+                icon: "arrow-right"
+                tip: "Forward"
                 enabled: !!Browser.current && Browser.current.canGoForward
                 onClicked: Browser.run("forward")
             }
             IconButton {
                 readonly property bool loading: !!Browser.current && Browser.current.loading
-                text: loading ? "×" : "↻"
+                icon: loading ? "x" : "rotate-cw"
+                tip: loading ? "Stop" : "Reload"
                 onClicked: Browser.run(loading ? "stop" : "reload")
             }
 
@@ -52,6 +55,12 @@ Rectangle {
             WidgetSlot { name: "toolbar-right" }
         }
 
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            color: Theme.border
+        }
+
         WebArea {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -61,7 +70,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 26
             visible: statusbar.count > 0
-            color: Qt.darker(Config.appearance.background, 1.25)
+            color: Theme.sunken
 
             WidgetSlot {
                 id: statusbar

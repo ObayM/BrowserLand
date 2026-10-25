@@ -44,7 +44,8 @@ IconButton {
     }
 
     visible: Browser.downloads.length > 0
-    text: "↓"
+    icon: "download"
+    tip: "Downloads"
     onClicked: panel.open = !panel.open
 
     property int lastCount: 0
@@ -63,7 +64,9 @@ IconButton {
         height: 2
         radius: 1
         visible: button.active.length > 0
-        color: Config.appearance.accent
+        color: Theme.accent
+
+        Behavior on width { NumberAnimation { duration: Theme.duration } }
     }
 
     Popover {
@@ -83,12 +86,10 @@ IconButton {
                 Layout.fillWidth: true
                 Layout.leftMargin: 4
 
-                Text {
+                UiText {
                     Layout.fillWidth: true
                     text: "Downloads"
-                    color: Config.appearance.foreground
                     font.bold: true
-                    font.pixelSize: Config.appearance.font_size
                 }
                 TextButton {
                     text: "Open folder"
@@ -111,8 +112,8 @@ IconButton {
 
                     Layout.fillWidth: true
                     implicitHeight: 44
-                    radius: 6
-                    color: mouse.containsMouse && done ? Qt.lighter(Config.appearance.background, 1.6) : "transparent"
+                    radius: Theme.radiusSmall
+                    color: mouse.containsMouse && done ? Theme.hover : "transparent"
 
                     MouseArea {
                         id: mouse
@@ -125,20 +126,17 @@ IconButton {
                         anchors { left: parent.left; leftMargin: 8; right: rowButton.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
                         spacing: 2
 
-                        Text {
+                        UiText {
                             width: parent.width
                             text: row.modelData.downloadFileName
-                            color: Config.appearance.foreground
                             elide: Text.ElideMiddle
-                            font.pixelSize: Config.appearance.font_size
                         }
-                        Text {
+                        UiText {
                             width: parent.width
                             text: button.status(row.modelData)
-                            color: Config.appearance.foreground
-                            opacity: 0.6
+                            color: Theme.muted
                             elide: Text.ElideRight
-                            font.pixelSize: Config.appearance.font_size - 2
+                            font.pixelSize: Theme.fontSizeSmall
                         }
                     }
 
@@ -148,7 +146,8 @@ IconButton {
                         visible: !row.modelData.isFinished
                         implicitWidth: 24
                         implicitHeight: 24
-                        text: "×"
+                        icon: "x"
+                        iconSize: 14
                         onClicked: row.modelData.cancel()
                     }
                 }

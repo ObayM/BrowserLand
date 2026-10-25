@@ -16,13 +16,22 @@ Rectangle {
             Browser.current.forceActiveFocus()
     }
 
-    visible: !!target
+    opacity: target ? 1 : 0
+    visible: opacity > 0
     width: 340
-    height: 38
-    radius: 8
-    color: Qt.lighter(Config.appearance.background, 1.35)
+    height: 40
+    radius: Theme.radius
+    color: Theme.overlay
     border.width: 1
-    border.color: Config.appearance.accent
+    border.color: Theme.border
+
+    transform: Translate {
+        y: findBar.target ? 0 : -6
+
+        Behavior on y { NumberAnimation { duration: Theme.duration; easing.type: Easing.OutCubic } }
+    }
+
+    Behavior on opacity { NumberAnimation { duration: Theme.duration; easing.type: Easing.OutCubic } }
 
     Connections {
         target: Browser
@@ -50,44 +59,44 @@ Rectangle {
             Layout.fillWidth: true
             clip: true
             selectByMouse: true
-            color: Config.appearance.foreground
-            selectionColor: Config.appearance.accent
-            selectedTextColor: Config.appearance.background
-            font.pixelSize: Config.appearance.font_size
+            color: Theme.foreground
+            selectionColor: Theme.accent
+            selectedTextColor: Theme.background
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
 
             onTextEdited: Browser.find(text)
             Keys.onReturnPressed: event => Browser.find(text, event.modifiers & Qt.ShiftModifier)
             Keys.onEnterPressed: event => Browser.find(text, event.modifiers & Qt.ShiftModifier)
             Keys.onEscapePressed: findBar.close()
 
-            Text {
+            UiText {
                 anchors.fill: parent
                 visible: input.text === ""
                 text: "Find in page"
-                color: Config.appearance.foreground
-                opacity: 0.4
-                font.pixelSize: Config.appearance.font_size
+                color: Theme.muted
             }
         }
 
-        Text {
+        UiText {
             visible: input.text !== ""
             text: Browser.findResult.activeMatch + "/" + Browser.findResult.numberOfMatches
-            color: Config.appearance.foreground
-            opacity: 0.6
-            font.pixelSize: Config.appearance.font_size - 1
+            color: Theme.muted
+            font.pixelSize: Theme.fontSize - 1
         }
 
         IconButton {
-            text: "↑"
+            icon: "chevron-up"
+            tip: "Previous"
             onClicked: Browser.find(input.text, true)
         }
         IconButton {
-            text: "↓"
+            icon: "chevron-down"
+            tip: "Next"
             onClicked: Browser.find(input.text, false)
         }
         IconButton {
-            text: "×"
+            icon: "x"
             onClicked: findBar.close()
         }
     }

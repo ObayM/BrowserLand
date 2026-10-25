@@ -11,12 +11,22 @@ Rectangle {
     property bool closeOnOutsideClick: false
 
     parent: anchorItem.Window.contentItem
-    visible: open
+    opacity: open ? 1 : 0
+    visible: opacity > 0
+    enabled: open
     z: 90
-    radius: 8
-    color: Qt.lighter(Config.appearance.background, 1.25)
+    radius: Theme.radius
+    color: Theme.overlay
     border.width: 1
-    border.color: Qt.lighter(Config.appearance.background, 1.9)
+    border.color: Theme.border
+
+    transform: Translate {
+        y: popover.open ? 0 : -6
+
+        Behavior on y { NumberAnimation { duration: Theme.duration; easing.type: Easing.OutCubic } }
+    }
+
+    Behavior on opacity { NumberAnimation { duration: Theme.duration; easing.type: Easing.OutCubic } }
 
     function place() {
         if (!parent)

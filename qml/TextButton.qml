@@ -8,17 +8,23 @@ Rectangle {
     property bool primary: false
     signal clicked()
 
-    implicitWidth: label.implicitWidth + 20
-    implicitHeight: 26
-    radius: 6
-    color: primary ? Config.appearance.accent
-                   : Qt.lighter(Config.appearance.background, mouse.containsMouse ? 1.9 : 1.6)
+    implicitWidth: label.implicitWidth + 24
+    implicitHeight: 28
+    radius: Theme.radiusSmall
+    color: primary ? Theme.accent : Theme.hover
 
-    Text {
+    Rectangle {
+        anchors.fill: parent
+        radius: parent.radius
+        color: mouse.pressed ? Theme.pressed : mouse.containsMouse ? Theme.hover : "transparent"
+
+        Behavior on color { ColorAnimation { duration: Theme.duration / 2 } }
+    }
+
+    UiText {
         id: label
         anchors.centerIn: parent
-        color: button.primary ? Config.appearance.background : Config.appearance.foreground
-        font.pixelSize: Config.appearance.font_size
+        color: button.primary ? Theme.background : Theme.foreground
     }
 
     MouseArea {

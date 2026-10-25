@@ -16,11 +16,13 @@ Rectangle {
             Browser.current.forceActiveFocus()
     }
 
-    implicitHeight: 30
-    radius: 8
-    color: Qt.lighter(Config.appearance.background, 1.35)
-    border.width: input.activeFocus ? 2 : 0
-    border.color: Config.appearance.accent
+    implicitHeight: 32
+    radius: Theme.radius
+    color: Theme.raised
+    border.width: 2
+    border.color: input.activeFocus ? Theme.accent : Theme.alpha(Theme.accent, 0)
+
+    Behavior on border.color { ColorAnimation { duration: Theme.duration } }
 
     TextInput {
         id: input
@@ -28,10 +30,12 @@ Rectangle {
         verticalAlignment: TextInput.AlignVCenter
         clip: true
         selectByMouse: true
-        color: Config.appearance.foreground
-        selectionColor: Config.appearance.accent
-        selectedTextColor: Config.appearance.background
-        font.pixelSize: Config.appearance.font_size
+        
+        color: Theme.foreground
+        selectionColor: Theme.accent
+        selectedTextColor: Theme.background
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
 
         onTextEdited: {
             bar.typing = true
@@ -62,23 +66,33 @@ Rectangle {
         Component.onCompleted: text = bar.pageUrl
     }
 
-    Text {
+    UiText {
         anchors.fill: input
         verticalAlignment: Text.AlignVCenter
         visible: input.text === ""
         text: "Search or type an address"
-        color: Config.appearance.foreground
-        opacity: 0.4
-        font.pixelSize: Config.appearance.font_size
+        color: Theme.muted
     }
 
     Rectangle {
-        anchors { left: parent.left; leftMargin: 4; bottom: parent.bottom }
+        id: progressLine
+
+        readonly property bool loading: !!Browser.current && Browser.current.loading
+        property real progress: loading ? Browser.current.loadProgress / 100 : 1
+
+        anchors { left: parent.left; leftMargin: bar.radius / 2 + 2; bottom: parent.bottom; bottomMargin: 1 }
+        width: (bar.width - anchors.leftMargin * 2) * progress
         height: 2
         radius: 1
-        width: Browser.current && Browser.current.loading ? (bar.width - 8) * Browser.current.loadProgress / 100 : 0
-        visible: width > 0
-        color: Config.appearance.accent
+        color: Theme.accent
+        opacity: loading ? 1 : 0
+        visible: opacity > 0
+
+        Behavior on progress {
+            enabled: progressLine.opacity > 0.99
+            NumberAnimation { duration: Theme.duration; easing.type: Easing.OutCubic }
+        }
+        Behavior on opacity { NumberAnimation { duration: Theme.duration * 2 } }
     }
 
     Popover {
@@ -103,26 +117,24 @@ Rectangle {
 
                     width: list.width
                     height: 32
-                    radius: 6
-                    color: index === bar.selected || mouse.containsMouse ? Qt.lighter(Config.appearance.background, 1.7) : "transparent"
+                    radius: Theme.radiusSmall
+                    color: index === bar.selected || mouse.containsMouse ? Theme.hover : "transparent"
 
-                    Text {
+                    UiText {
                         id: title
                         anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
                         width: Math.min(implicitWidth, parent.width * 0.55)
                         text: row.modelData.title || row.modelData.url
-                        color: Config.appearance.foreground
                         elide: Text.ElideRight
-                        font.pixelSize: Config.appearance.font_size
                     }
 
-                    Text {
+                    UiText {
                         anchors { left: title.right; leftMargin: 10; right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
                         text: row.modelData.url
-                        color: Config.appearance.accent
+                        color: Theme.accent
                         opacity: 0.8
                         elide: Text.ElideRight
-                        font.pixelSize: Config.appearance.font_size - 1
+                        font.pixelSize: Theme.fontSize - 1
                     }
 
                     MouseArea {
