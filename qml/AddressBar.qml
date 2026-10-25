@@ -4,7 +4,7 @@ import BrowserLand
 Rectangle {
     id: bar
 
-    readonly property string pageUrl: Browser.current ? Browser.current.url.toString() : ""
+    readonly property string pageUrl: Browser.current && !Browser.current.newTabPage ? Browser.current.url.toString() : ""
     readonly property var parts: split(pageUrl)
     property var suggestions: []
     property int selected: -1

@@ -266,7 +266,7 @@ Rectangle {
 
             Binding on title {
                 when: !!tab.view && !tab.closing
-                value: tab.view ? tab.view.title || tab.view.pendingTitle || tab.view.url.toString() || tab.view.pendingUrl : ""
+                value: !tab.view ? "" : tab.view.newTabPage ? "New Tab" : tab.view.title || tab.view.pendingTitle || tab.view.url.toString() || tab.view.pendingUrl
                 restoreMode: Binding.RestoreNone
             }
             Binding on icon {
@@ -564,7 +564,8 @@ Rectangle {
             offset.y: 2
             color: Qt.rgba(0, 0, 0, Theme.dark ? 0.4 : 0.15)
         }
-  UiText {
+
+        UiText {
             id: header
             anchors { left: parent.left; right: parent.right; top: parent.top }
             padding: 12

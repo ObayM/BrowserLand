@@ -14,6 +14,7 @@ QtObject {
 
     property Item pool: null
     property bool started: false
+    readonly property string newTabUrl: "about:blank#newtab"
 
     property WebEngineProfile profile: null
     readonly property string downloadDir: System.downloadDir(Config.general.download_dir || "")
@@ -85,7 +86,7 @@ QtObject {
     function newTab(url, background, index) {
         const view = tabComponent.createObject(pool)
         if (url !== null)
-            view.url = toUrl(url === undefined ? Config.general.homepage : url)
+            view.url = toUrl(url === undefined ? Config.general.new_tab || newTabUrl : url)
         insertTab(view, index, background)
         return view
     }
@@ -117,7 +118,7 @@ QtObject {
         permissionRequests = permissionRequests.filter(r => r.view !== view)
 
         const url = view.pendingUrl || view.url.toString()
-        if (url !== "")
+        if (url !== "" && url !== newTabUrl)
             closedTabs = closedTabs.concat([{ url, index }]).slice(-25)
 
         if (remaining.length === 0) {
@@ -452,10 +453,16 @@ ${rule.source}
 
             property string pendingUrl: ""
             property string pendingTitle: ""
+            readonly property bool newTabPage: (url.toString() || pendingUrl) === browser.newTabUrl
+
             property string ruleHost: ""
             property real ruleZoom: 0
 
             function captureThumbnail() {
+                if (newTabPage) {
+                    thumbnail = null
+                    return
+                }
                 if (view !== browser.current || width <= 0 || height <= 0)
                     return
                 
@@ -490,9 +497,10 @@ ${rule.source}
             onTitleChanged: browser.scheduleSave()
 
             onLoadingChanged: info => {
-                if (info.status === WebEngineLoadingInfo.LoadSucceededStatus)
+                if (info.status === WebEngineLoadingInfo.LoadSucceededStatus) {
                     view.thumbnailTimer.restart()
                     History.add(info.url, view.title)
+                }
             }
 
             onFindTextFinished: result => {

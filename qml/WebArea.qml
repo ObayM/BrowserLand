@@ -14,7 +14,7 @@ Item {
         if (view && view !== Browser.fullScreenView) {
             view.parent = area
             view.anchors.fill = area
-            view.visible = true
+            view.visible = Qt.binding(() => !view.newTabPage)
         }
         shown = view
     }
@@ -23,6 +23,12 @@ Item {
         target: Browser
         function onCurrentChanged() { area.showCurrent() }
         function onFullScreenViewChanged() { area.showCurrent() }
+    }
+
+    NewTabPage {
+        anchors.fill: parent
+        z: 1
+        visible: !!Browser.current && Browser.current.newTabPage
     }
 
     PermissionPrompt {
