@@ -2,6 +2,8 @@
 #include <QQmlApplicationEngine>
 #include <QtWebEngineQuick/qtwebenginequickglobal.h>
 
+#include "config/Config.h"
+
 int main (int argc, char *argv[])
 {
     QtWebEngineQuick::initialize();
@@ -9,6 +11,9 @@ int main (int argc, char *argv[])
     QGuiApplication app(argc, argv);
     app.setApplicationName("browserland");
     app.setOrganizationName("browserland");
+
+    Config::installStarterConfig(Config::defaultConfigDir());
+    Config config(Config::defaultConfigDir());
 
     QQmlApplicationEngine engine;
 

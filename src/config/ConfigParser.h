@@ -10,29 +10,29 @@
 struct ConfigError
 {
     QString file;
-    init line = 0;
+    int line = 0;
     QString message;
 
     QString toString() const;
 };
 
 
-struct KeyBind
+struct Keybind
 {
     QString sequence;
     QString action;
     QString args;
 
     QString file;
-    int line = 0
-}
+    int line = 0;
+};
 
 
 struct WidgetDecl
 {
     QString name;
     QString file;
-    
+
     QString slot;
 };
 
@@ -52,7 +52,7 @@ private:
     void reset();
     void readFile(const QString &path, const QString &fromFile, int fromLine);
     void parseText(const QString &text, const QString &file);
-    
+
     void parseBind(const QString &value, const QString &file, int line);
     void parseWidget(const QString &value, const QString &file, int line);
 

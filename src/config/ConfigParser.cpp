@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
+#include <QKeySequence>
 
 #include <utility>
 
@@ -21,16 +22,16 @@ bool isIdentifier(const QString &name)
 QString stripComment(const QString &line)
 {
     for (int i = 0; i < line.size(); ++i) {
-        
+
         if (line.at(i) != u'#')
             continue;
-        
+
         const bool atStart = line.left(i).trimmed().isEmpty();
 
         const bool spaceBefore = i > 0 && line.at(i - 1).isSpace();
-        
+
         const bool spaceAfter = i + 1 >= line.size() || line.at(i + 1).isSpace();
-        
+
         if (atStart || (spaceBefore && spaceAfter))
             return line.left(i);
     }
@@ -43,7 +44,7 @@ QStringList splitArgs(const QString &value)
 
     for (QString &part : parts)
         part = part.trimmed();
-    
+
     return parts;
 }
 
@@ -52,7 +53,7 @@ QString resolvePath(const QString &path, const QString &relativeTo)
     QString p = path.trimmed();
     if (p == u"~" || p.startsWith(u"~/"))
         p = QDir::homePath() + p.mid(1);
-    
+
     if (QDir::isRelativePath(p)) {
         const QFileInfo from(relativeTo);
 
@@ -64,10 +65,16 @@ QString resolvePath(const QString &path, const QString &relativeTo)
     return QDir::cleanPath(p);
 }
 
+}
 
 QString ConfigError::toString() const
 {
-    return QStringLiteral("%1:%2: %3").arg(QFileInfo(file).fileName()).arg(line).arg(message);
+    const QString name = QFileInfo(file).fileName();
+
+    if (line <= 0)
+        return QStringLiteral("%1: %2").arg(name, message);
+
+    return QStringLiteral("%1:%2: %3").arg(name).arg(line).arg(message);
 }
 
 ParsedConfig ConfigParser::parseFile(const QString &path)
@@ -88,8 +95,8 @@ ParsedConfig ConfigParser::parseString(const QString &text, const QString &fileN
 
 void ConfigParser::reset()
 {
-    m_result = {}
-    m_variables.clear()
+    m_result = {};
+    m_variables.clear();
     m_fileStack.clear();
 }
 
@@ -131,9 +138,9 @@ void ConfigParser::parseText(const QString &text, const QString &file)
 
     for (int i = 0; i < lines.size(); ++i) {
         const int lineNo = i + 1;
-        
+
         const QString line = stripComment(lines.at(i)).trimmed();
-        
+
         if (line.isEmpty())
             continue;
 
@@ -150,7 +157,7 @@ void ConfigParser::parseText(const QString &text, const QString &file)
 
             if (!isIdentifier(name))
                 addError(file, lineNo, QStringLiteral("invalid section name '%1' (use letters, digits and _)").arg(name));
-            
+
             sections.append(name);
             continue;
         }
@@ -165,13 +172,13 @@ void ConfigParser::parseText(const QString &text, const QString &file)
         const QString rawValue = line.mid(eq + 1).trimmed();
 
         if (key.startsWith(u'$')) {
-            
+
             const QString name = key.mid(1);
             if (!isIdentifier(name)) {
                 addError(file, lineNo, QStringLiteral("invalid variable name '%1'").arg(key));
                 continue;
             }
-            
+
             m_variables.insert(name, substitute(rawValue, file, lineNo));
             continue;
         }
@@ -211,7 +218,7 @@ void ConfigParser::parseText(const QString &text, const QString &file)
 void ConfigParser::parseBind(const QString &value, const QString &file, int line)
 {
     QStringList parts = splitArgs(value);
-    
+
     if (parts.size() < 3 || parts.at(2).isEmpty()) {
         addError(file, line, QStringLiteral("bind needs 'MODS, KEY, action', got '%1'").arg(value));
         return;
@@ -220,27 +227,34 @@ void ConfigParser::parseBind(const QString &value, const QString &file, int line
     QString error;
 
     const QString sequence = keySequence(parts.at(0), parts.at(1), &error);
-    
+
     if (sequence.isEmpty()) {
         addError(file, line, error);
         return;
     }
 
     const QString args = parts.mid(3).join(QStringLiteral(", "));
-    
+
     m_result.binds.append({sequence, parts.at(2), args, file, line});
 }
 
 void ConfigParser::parseWidget(const QString &value, const QString &file, int line)
 {
     const QStringList parts = splitArgs(value);
-    
+
     if (parts.size() != 3 || parts.contains(QString())) {
         addError(file, line, QStringLiteral("widget needs 'name, file.qml, slot', got '%1'").arg(value));
         return;
     }
-    
-    m_result.widgets.append({parts.at(0), resolvePath(parts.at(1), file), parts.at(2)});
+
+    const QString path = resolvePath(parts.at(1), file);
+
+    if (!QFileInfo::exists(path)) {
+        addError(file, line, QStringLiteral("widget file not found: %1").arg(path));
+        return;
+    }
+
+    m_result.widgets.append({parts.at(0), path, parts.at(2)});
 }
 
 
@@ -252,13 +266,13 @@ QString ConfigParser::substitute(const QString &value, const QString &file, int 
     qsizetype last = 0;
 
     auto it = re.globalMatch(value);
-    
+
     while (it.hasNext()) {
         const auto match = it.next();
         out += value.mid(last, match.capturedStart() - last);
 
         const QString name = match.captured(1);
-        
+
         if (m_variables.contains(name)) {
             out += m_variables.value(name);
 
@@ -290,7 +304,7 @@ QVariant ConfigParser::typedValue(const QString &raw)
 
     if (lower == u"true" || lower == u"yes" || lower == u"on")
         return true;
-    
+
     if (lower == u"false" || lower == u"no" || lower == u"off")
         return false;
 
@@ -298,17 +312,17 @@ QVariant ConfigParser::typedValue(const QString &raw)
     static const QRegularExpression floatRe(QStringLiteral("^-?(\\d+\\.\\d*|\\.\\d+)$"));
 
     bool ok = false;
-    
+
     if (intRe.match(v).hasMatch()) {
         const int i = v.toInt(&ok);
-        
+
         if (ok)
             return i;
     }
 
     if (floatRe.match(v).hasMatch()) {
         const double d = v.toDouble(&ok);
-        
+
         if (ok)
             return d;
     }
@@ -371,7 +385,11 @@ QString ConfigParser::keySequence(const QString &mods, const QString &key, QStri
     else
         parts.append(k.left(1).toUpper() + k.mid(1).toLower());
 
-    return parts.join(u'+');
-}
+    const QString text = parts.join(u'+');
+    const QKeySequence sequence = QKeySequence::fromString(text, QKeySequence::PortableText);
 
+    if (sequence.count() != 1 || sequence[0].key() == Qt::Key_unknown)
+        return fail(QStringLiteral("unknown key '%1'").arg(k));
+
+    return text;
 }
