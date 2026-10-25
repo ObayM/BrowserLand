@@ -8,7 +8,9 @@ QtObject {
     readonly property color foreground: Config.appearance.foreground
     readonly property color accent: Config.appearance.accent
 
-    readonly property color sunken: Qt.tint(background, Qt.rgba(0, 0, 0, 0.2))
+    readonly property bool dark: background.hslLightness < 0.5
+    readonly property color sunken: Qt.tint(background, Qt.rgba(0, 0, 0, dark ? 0.45 : 0.12))
+    readonly property color field: Qt.tint(background, Qt.rgba(0, 0, 0, dark ? 0.33 : 0.055))
     readonly property color raised: Qt.tint(background, alpha(foreground, 0.07))
     readonly property color overlay: Qt.tint(background, alpha(foreground, 0.1))
     readonly property color hover: alpha(foreground, 0.08)

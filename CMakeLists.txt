@@ -61,6 +61,7 @@ qt_add_qml_module(browserland
         qml/Icon.qml
         qml/UiText.qml
         qml/Tooltip.qml
+        qml/AppMenu.qml
         qml/singletons/Browser.qml
         qml/singletons/Theme.qml
 )

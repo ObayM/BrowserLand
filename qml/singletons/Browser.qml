@@ -133,6 +133,19 @@ QtObject {
         view.destroy()
     }
 
+    function moveTab(from, to) {
+        if (from === to || from < 0 || to < 0 || from >= tabs.length || to >= tabs.length)
+            return
+        
+        const view = current
+        const next = tabs.slice()
+
+        next.splice(to, 0, next.splice(from, 1)[0])
+        
+        tabs = next
+        currentIndex = next.indexOf(view)
+    }
+
     function reopenClosedTab() {
         const last = closedTabs[closedTabs.length - 1]
         if (!last)

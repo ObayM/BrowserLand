@@ -6,14 +6,14 @@ Rectangle {
 
     property alias text: label.text
     property alias icon: glyph.name
-    property real iconSize: 16
+    property real iconSize: 18
     property string tip
     property bool tipShown: false
     signal clicked()
 
-    implicitWidth: 32
-    implicitHeight: 32
-    radius: Theme.radiusSmall
+    implicitWidth: 34
+    implicitHeight: 34
+    radius: Theme.radius > 0 ? Math.min(width, height) / 2 : 0
     opacity: enabled ? 1 : 0.35
     color: mouse.pressed ? Theme.pressed : mouse.containsMouse ? Theme.hover : "transparent"
 

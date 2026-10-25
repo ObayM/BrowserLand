@@ -18,10 +18,10 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 44
+            Layout.preferredHeight: 46
             Layout.leftMargin: 6
-            Layout.rightMargin: 8
-            spacing: 4
+            Layout.rightMargin: 6
+            spacing: 2
 
             WidgetSlot { name: "toolbar-left" }
 
@@ -46,13 +46,15 @@ Rectangle {
 
             AddressBar {
                 Layout.fillWidth: true
-                Layout.leftMargin: 4
-                Layout.rightMargin: 8
+                Layout.leftMargin: 6
+                Layout.rightMargin: 6
             }
 
             DownloadsButton {}
 
             WidgetSlot { name: "toolbar-right" }
+
+            AppMenu {}
         }
 
         Rectangle {

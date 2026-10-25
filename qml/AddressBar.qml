@@ -5,6 +5,7 @@ Rectangle {
     id: bar
 
     readonly property string pageUrl: Browser.current ? Browser.current.url.toString() : ""
+    readonly property var parts: split(pageUrl)
     property var suggestions: []
     property int selected: -1
     property bool typing: false
@@ -16,22 +17,67 @@ Rectangle {
             Browser.current.forceActiveFocus()
     }
 
-    implicitHeight: 32
-    radius: Theme.radius
-    color: Theme.raised
-    border.width: 2
-    border.color: input.activeFocus ? Theme.accent : Theme.alpha(Theme.accent, 0)
+    function split(url) {
+        if (url === "" || url === "about:blank")
+            return { scheme: "", host: "", rest: "" }
+        const match = url.match(/^(https?):\/\/(?:www\.)?([^\/?#]*)(.*)$/i)
+        if (!match)
+            return { scheme: "", host: url, rest: "" }
+        let rest = match[3] === "/" ? "" : match[3]
+        try {
+            rest = decodeURI(rest)
+        } catch (error) {
+        }
+        return { scheme: match[1].toLowerCase(), host: match[2], rest }
+    }
 
-    Behavior on border.color { ColorAnimation { duration: Theme.duration } }
+    implicitHeight: 34
+    radius: Theme.radius > 0 ? height / 2 : 0
+    bottomLeftRadius: dropdown.open ? 0 : radius
+    bottomRightRadius: dropdown.open ? 0 : radius
+    color: dropdown.open ? Theme.overlay
+         : input.activeFocus ? Theme.raised
+         : hover.hovered ? Qt.tint(Theme.field, Theme.hover) : Theme.field
+
+    Behavior on color {
+        enabled: !dropdown.open
+        ColorAnimation { duration: Theme.duration / 2 }
+    }
+
+    HoverHandler {
+        id: hover
+        cursorShape: Qt.IBeamCursor
+    }
+
+    Row {
+        id: site
+        anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
+        spacing: 6
+
+        readonly property bool insecure: bar.parts.scheme === "http" && !input.activeFocus
+
+        Icon {
+            anchors.verticalCenter: parent.verticalCenter
+            name: input.activeFocus || bar.parts.scheme === "" ? "search"
+                : bar.parts.scheme === "https" ? "settings-2" : "triangle-alert"
+            color: site.insecure ? Theme.muted : Theme.foreground
+        }
+
+        UiText {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: site.insecure
+            text: "Not secure"
+            color: Theme.muted
+        }
+    }
 
     TextInput {
         id: input
-        anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
+        anchors { left: site.right; leftMargin: 10; right: parent.right; rightMargin: 14; top: parent.top; bottom: parent.bottom }
         verticalAlignment: TextInput.AlignVCenter
         clip: true
         selectByMouse: true
-        
-        color: Theme.foreground
+        color: activeFocus ? Theme.foreground : "transparent"
         selectionColor: Theme.accent
         selectedTextColor: Theme.background
         font.family: Theme.fontFamily
@@ -66,6 +112,24 @@ Rectangle {
         Component.onCompleted: text = bar.pageUrl
     }
 
+    Row {
+        anchors { left: input.left; right: input.right; verticalCenter: parent.verticalCenter }
+        visible: !input.activeFocus && bar.parts.host !== ""
+        clip: true
+
+        UiText {
+            id: host
+            text: bar.parts.host
+        }
+
+        UiText {
+            width: Math.max(0, parent.width - host.width)
+            text: bar.parts.rest
+            color: Theme.muted
+            elide: Text.ElideRight
+        }
+    }
+
     UiText {
         anchors.fill: input
         verticalAlignment: Text.AlignVCenter
@@ -74,37 +138,24 @@ Rectangle {
         color: Theme.muted
     }
 
-    Rectangle {
-        id: progressLine
-
-        readonly property bool loading: !!Browser.current && Browser.current.loading
-        property real progress: loading ? Browser.current.loadProgress / 100 : 1
-
-        anchors { left: parent.left; leftMargin: bar.radius / 2 + 2; bottom: parent.bottom; bottomMargin: 1 }
-        width: (bar.width - anchors.leftMargin * 2) * progress
-        height: 2
-        radius: 1
-        color: Theme.accent
-        opacity: loading ? 1 : 0
-        visible: opacity > 0
-
-        Behavior on progress {
-            enabled: progressLine.opacity > 0.99
-            NumberAnimation { duration: Theme.duration; easing.type: Easing.OutCubic }
-        }
-        Behavior on opacity { NumberAnimation { duration: Theme.duration * 2 } }
-    }
-
     Popover {
         id: dropdown
         anchorItem: bar
+        attached: true
         open: bar.typing && input.activeFocus && bar.suggestions.length > 0
         width: bar.width
-        height: list.implicitHeight + 8
+        height: list.implicitHeight + 14
+        radius: bar.radius
+
+        Rectangle {
+            anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 14; rightMargin: 14 }
+            height: 1
+            color: Theme.border
+        }
 
         Column {
             id: list
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 4 }
+            anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: 6; leftMargin: 6; rightMargin: 6 }
 
             Repeater {
                 model: bar.suggestions
@@ -116,13 +167,20 @@ Rectangle {
                     required property int index
 
                     width: list.width
-                    height: 32
-                    radius: Theme.radiusSmall
+                    height: 36
+                    radius: Theme.radius
                     color: index === bar.selected || mouse.containsMouse ? Theme.hover : "transparent"
+
+                    Icon {
+                        id: rowIcon
+                        anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
+                        name: "history"
+                        color: Theme.muted
+                    }
 
                     UiText {
                         id: title
-                        anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                        anchors { left: rowIcon.right; leftMargin: 12; verticalCenter: parent.verticalCenter }
                         width: Math.min(implicitWidth, parent.width * 0.55)
                         text: row.modelData.title || row.modelData.url
                         elide: Text.ElideRight
@@ -131,10 +189,8 @@ Rectangle {
                     UiText {
                         anchors { left: title.right; leftMargin: 10; right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
                         text: row.modelData.url
-                        color: Theme.accent
-                        opacity: 0.8
+                        color: Theme.muted
                         elide: Text.ElideRight
-                        font.pixelSize: Theme.fontSize - 1
                     }
 
                     MouseArea {

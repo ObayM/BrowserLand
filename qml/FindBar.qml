@@ -86,16 +86,27 @@ Rectangle {
         }
 
         IconButton {
+            implicitWidth: 30
+            implicitHeight: 30
+            
+            iconSize: 16
             icon: "chevron-up"
             tip: "Previous"
             onClicked: Browser.find(input.text, true)
         }
+        
         IconButton {
+            implicitWidth: 30
+            implicitHeight: 30
+            iconSize: 16
             icon: "chevron-down"
             tip: "Next"
             onClicked: Browser.find(input.text, false)
         }
         IconButton {
+            implicitWidth: 30
+            implicitHeight: 30
+            iconSize: 16
             icon: "x"
             onClicked: findBar.close()
         }
