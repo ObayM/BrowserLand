@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 6.9 REQUIRED COMPONENTS Core Gui Qml Quick Sql WebEngineQuick)
+find_package(Qt6 6.9 REQUIRED COMPONENTS Core Gui Network Qml Quick Sql WebEngineQuick)
 qt_standard_project_setup()
 
 add_library(browserland_config STATIC
@@ -22,7 +22,11 @@ qt_add_resources(browserland_config defaults
     FILES resources/default.conf
 )
 
-qt_add_executable(browserland src/main.cpp)
+qt_add_executable(browserland
+    src/main.cpp
+    src/browser/Remote.cpp
+    src/browser/Remote.h
+)
 set_source_files_properties(qml/singletons/Browser.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_qml_module(browserland
@@ -62,6 +66,7 @@ target_include_directories(browserland PRIVATE src/config src/browser)
 target_link_libraries(browserland PRIVATE
     browserland_config
     Qt6::Gui
+    Qt6::Network
     Qt6::Qml
     Qt6::Quick
     Qt6::Sql

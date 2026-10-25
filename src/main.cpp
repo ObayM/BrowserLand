@@ -1,4 +1,5 @@
 #include "browser/History.h"
+#include "browser/Remote.h"
 #include "browser/System.h"
 #include "config/Config.h"
 #include "config/ConfigCheck.h"
@@ -16,7 +17,8 @@ namespace {
 
 void addOptions(QCommandLineParser &parser)
 {
-    parser.setApplicationDescription(QStringLiteral("BrowserLand: the browser you configure like Hyprland."));
+    parser.setApplicationDescription(QStringLiteral("BrowserLand: the browser you configure like Hyprland.\n"
+                                                    "Control the running one with: browserland dispatch ACTION [ARGS]"));
     parser.addHelpOption();
     parser.addOptions({
         {QStringLiteral("config-dir"), QStringLiteral("Read browserland.conf from <dir>."), QStringLiteral("dir")},
@@ -30,7 +32,9 @@ QString configDirFrom(const QCommandLineParser &parser)
 {
     if (parser.isSet(QStringLiteral("config-dir")))
         return QDir(parser.value(QStringLiteral("config-dir"))).absolutePath();
+    
     const QString fromEnv = qEnvironmentVariable("BROWSERLAND_CONFIG_DIR");
+
     if (!fromEnv.isEmpty())
         return QDir(fromEnv).absolutePath();
     return Config::defaultConfigDir();
@@ -56,12 +60,47 @@ int runConfigCheck(int argc, char *argv[])
     return checkConfig(QDir(configDirFrom(parser)).filePath(QStringLiteral("browserland.conf")), out);
 }
 
+bool wantsDispatch(int argc, char *argv[])
+{
+    return argc > 1 && qstrcmp(argv[1], "dispatch") == 0;
+}
+
+int runDispatch(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+    QTextStream err(stderr);
+
+    QStringList words = app.arguments().mid(2);
+    if (words.isEmpty()) {
+        err << "usage: browserland dispatch ACTION [ARGS]\n";
+        return 1;
+    }
+    const QString action = words.takeFirst();
+
+    QStringList replies;
+    
+    if (!Remote::send({QStringLiteral("dispatch %1 %2").arg(action, words.join(u' '))}, &replies)) {
+        err << "browserland isn't running\n";
+        return 1;
+    }
+
+    if (replies.value(0) == u"ok")
+        return 0;
+    err << (replies.isEmpty() ? QStringLiteral("browserland didn't answer") : replies.constFirst()) << '\n';
+    return 1;
+}
+
 }
 
 int main(int argc, char *argv[])
 {
     if (wantsConfigCheck(argc, argv))
         return runConfigCheck(argc, argv);
+    
+    if (wantsDispatch(argc, argv))
+        return runDispatch(argc, argv);
+
+    const QString activationToken = qEnvironmentVariable("XDG_ACTIVATION_TOKEN");
 
     QtWebEngineQuick::initialize();
 
@@ -76,6 +115,18 @@ int main(int argc, char *argv[])
     addOptions(parser);
     parser.process(app);
 
+    const QStringList urls = parser.positionalArguments();
+    QStringList commands;
+
+    if (!urls.isEmpty())
+        commands.append(QStringLiteral("dispatch new-tab ")
+                        + QString::fromUtf8(QUrl::fromUserInput(urls.constFirst()).toEncoded()));
+    
+    commands.append(QStringLiteral("activate ") + activationToken);
+    
+    if (Remote::send(commands))
+        return 0;
+
     const QString configDir = configDirFrom(parser);
     if (configDir == Config::defaultConfigDir())
         Config::installStarterConfig(configDir);
@@ -87,7 +138,9 @@ int main(int argc, char *argv[])
 
     engine.addImportPath(QStringLiteral("qrc:/qt/qml"));
 
-    const QStringList urls = parser.positionalArguments();
+    Remote remote(&engine);
+    remote.listen();
+
     if (!urls.isEmpty())
         engine.setInitialProperties({{"startUrl", QUrl::fromUserInput(urls.constFirst())}});
 

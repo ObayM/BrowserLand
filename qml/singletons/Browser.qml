@@ -29,7 +29,7 @@ QtObject {
     signal notificationPresented(var notification)
 
     readonly property var actions: ({
-        "new-tab": args => { browser.newTab(args || undefined); browser.focusUrlRequested() },
+        "new-tab": args => { browser.newTab(args || undefined); if (!args) browser.focusUrlRequested() },
         "close-tab": () => browser.closeTab(browser.currentIndex),
         "reopen-closed-tab": () => browser.reopenClosedTab(),
         "next-tab": () => browser.selectTab((browser.currentIndex + 1) % browser.tabs.length),
@@ -68,9 +68,10 @@ QtObject {
         const action = actions[name]
         if (!action) {
             console.warn("BrowserLand: unknown action '" + name + "'")
-            return
+            return false
         }
         action(args)
+        return true
     }
 
     function start(url) {
