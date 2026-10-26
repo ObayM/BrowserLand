@@ -410,7 +410,7 @@ ${rule.source}
     property WebEngineProfilePrototype profilePrototype: WebEngineProfilePrototype {
         storageName: "default"
         persistentStoragePath: System.dataDir + "/profile"
-        persistentPermissionsPolicy: WebEngineProfile.PersistentPermissionsPolicy.StoreInMemory
+        persistentPermissionsPolicy: WebEngineProfile.PersistentPermissionsPolicy.StoreOnDisk
     }
 
     onDownloadDirChanged: if (profile) profile.downloadPath = downloadDir
