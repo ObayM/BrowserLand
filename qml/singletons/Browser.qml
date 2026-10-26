@@ -31,6 +31,7 @@ QtObject {
     signal notificationPresented(var notification)
 
     signal contextMenuRequested(var view, var request)
+    signal menuRequested(var sections, var item, real x, real y)
     signal inspectRequested()
 
     readonly property var actions: ({

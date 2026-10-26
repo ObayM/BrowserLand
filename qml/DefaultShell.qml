@@ -17,6 +17,23 @@ Rectangle {
             visible: Browser.verticalTabs
         }
 
+        TapHandler {
+            acceptedButtons: Qt.RightButton
+            gesturePolicy: TapHandler.WithinBounds
+            onTapped: point => Browser.menuRequested([
+                [
+                    { text: "New tab", run: () => Browser.run("new-tab") },
+                    { text: "Reopen closed tab", enabled: Browser.closedTabs.length > 0, run: () => Browser.run("reopen-closed-tab") }
+                ],
+                [
+                    { text: Browser.verticalTabs ? "Horizontal tabs" : "Vertical tabs", run: () => Browser.run("toggle-tabs") },
+                    { text: "Reload config", run: () => Browser.run("reload-config") },
+                    { text: "Open config file", run: () => Qt.openUrlExternally("file://" + Config.configFile) }
+                ]
+            ], parent, point.position.x, point.position.y)
+    
+        }
+
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true

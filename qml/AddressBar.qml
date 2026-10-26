@@ -25,7 +25,7 @@ Rectangle {
             return { scheme: "", host: url, rest: "" }
         let rest = match[3] === "/" ? "" : match[3]
         try {
-            rest = decodeURI(rest)
+            rest = decodeURI(rest).replace(/[\u0000-\u001f\u007f]/g, encodeURIComponent)
         } catch (error) {
         }
         return { scheme: match[1].toLowerCase(), host: match[2], rest }
@@ -47,6 +47,25 @@ Rectangle {
     HoverHandler {
         id: hover
         cursorShape: Qt.IBeamCursor
+    }
+
+    TapHandler {
+        acceptedButtons: Qt.RightButton
+        gesturePolicy: TapHandler.WithinBounds
+
+        onTapped: point => Browser.menuRequested([
+            [
+                { text: "Cut", enabled: input.activeFocus && input.selectedText !== "", run: () => input.cut() },
+                { text: "Copy", enabled: input.selectedText !== "", run: () => input.copy() },
+                { text: "Paste", enabled: input.activeFocus && input.canPaste, run: () => input.paste() },
+                { text: "Paste and go", enabled: input.canPaste, run: () => { input.selectAll(); input.paste(); bar.go(input.text.replace(/\s+/g, " ")) } }
+            ],
+            [
+                { text: "Copy address", enabled: bar.pageUrl !== "",
+                  run: () => { input.text = bar.pageUrl; input.selectAll(); input.copy(); input.deselect() } },
+                { text: "Site info", enabled: bar.parts.scheme !== "", run: () => siteInfo.open = true }
+            ]
+        ], parent, point.position.x, point.position.y)
     }
 
     Rectangle {

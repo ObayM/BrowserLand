@@ -117,12 +117,15 @@ Item {
 
         sections.push([{ text: "Inspect", shortcut: bound("devtools"), run: () => Browser.inspectRequested() }])
 
-        return sections.reduce((all, section) => all.length > 0 ? all.concat([{ separator: true }], section) : section, [])
+        return sections
     }
 
-    function show(view, request) {
-        items = build(view, request)
-        const point = view.mapToItem(menu, request.position.x, request.position.y)
+    function popup(sections, item, x, y) {
+        items = sections.filter(section => section.length > 0).reduce(
+                (all, section) => all.length > 0 ? all.concat([{separator: true}], section) : section, [])
+            
+        
+        const point = item.mapToItem(menu, x, y)
         
         panel.x = point.x + panel.width > width - 4 ? Math.max(4, point.x - panel.width) : point.x
         panel.y = point.y + contentHeight > height - 4 ? Math.max(4, point.y - contentHeight) : point.y
@@ -137,8 +140,13 @@ Item {
 
     Connections {
         target: Browser
-        function onContextMenuRequested(view, request) { menu.show(view, request) }
+        function onContextMenuRequested(view, request) { 
+            menu.popup(
+                menu.build(view, request), view, request.position.x, request.position.y
+            )
+        }
         function onCurrentChanged() { menu.open = false }
+        function onMenuRequested(sections, item, x, y) { menu.popup(sections, item, x, y) }    
     }
 
     Shortcut {

@@ -413,6 +413,30 @@ Rectangle {
                     }
                 }
 
+                TapHandler {
+                    acceptedButtons: Qt.RightButton
+                    gesturePolicy: TapHandler.WithinBounds
+                    onTapped: point => {
+                        const index = () => Browser.tabs.indexOf(tab.view)
+                        const url = tab.view.pendingUrl || tab.view.url.toString()
+                        Browser.menuRequested([
+                            [
+                                { text: "New tab to the right", run: () => Browser.newTab(undefined, false, index() + 1) },
+                                { text: "Duplicate", run: () => Browser.newTab(url, false, index() + 1) },
+                                { text: "Reload", run: () => tab.view.reload() },
+                                { text: tab.view.audioMuted ? "Unmute tab" : "Mute tab", run: () => tab.view.audioMuted = !tab.view.audioMuted }
+                            ],
+                            [
+                                { text: "Close tab", run: () => strip.closeFromMouse(tab.view) },
+                                { text: "Close other tabs", enabled: Browser.tabs.length > 1,
+                                  run: () => Browser.tabs.filter(view => view !== tab.view).forEach(view => Browser.closeTab(Browser.tabs.indexOf(view))) },
+                                { text: "Close tabs to the right", enabled: index() < Browser.tabs.length - 1,
+                                  run: () => Browser.tabs.slice(index() + 1).forEach(view => Browser.closeTab(Browser.tabs.indexOf(view))) }
+                            ]
+                        ], parent, point.position.x, point.position.y)
+                    }
+                }
+
                 Item {
                     id: content
                     anchors { fill: parent; leftMargin: strip.inset + 10; rightMargin: strip.inset + 6; bottomMargin: 6 }
