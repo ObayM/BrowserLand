@@ -515,7 +515,19 @@ Rectangle {
     WidgetSlot {
         id: extraWidgets
         name: "tabbar-right"
-        anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+        anchors { right: windowClose.left; rightMargin: 4; verticalCenter: parent.verticalCenter }
+    }
+
+    IconButton {
+        id: windowClose 
+        anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter; verticalCenterOffset: 2 }
+        implicitHeight: 28
+        implicitWidth: 28
+
+        icon: "x"
+        iconSize: 16
+        tip: "Close window"
+        onClicked: strip.Window.window.close() // bye :(
     }
 
      Rectangle {
