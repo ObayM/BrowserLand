@@ -42,6 +42,8 @@ qt_add_qml_module(browserland
         src/browser/History.h
         src/browser/System.cpp
         src/browser/System.h
+        src/browser/Cookies.cpp
+        src/browser/Cookies.h
     QML_FILES
         qml/Main.qml
         qml/DefaultShell.qml
@@ -66,6 +68,7 @@ qt_add_qml_module(browserland
         qml/singletons/Theme.qml
         qml/NewTabPage.qml
         qml/TabSidebar.qml
+        qml/SiteInfo.qml
 )
 
 target_include_directories(browserland PRIVATE src/config src/browser)

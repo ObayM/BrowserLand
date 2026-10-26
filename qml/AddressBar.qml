@@ -49,31 +49,56 @@ Rectangle {
         cursorShape: Qt.IBeamCursor
     }
 
-    Row {
+    Rectangle {
         id: site
-        anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
-        spacing: 6
+        anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }
+        width: siteRow.implicitWidth + 12
+        height: parent.height - 8
+        radius: Theme.radius > 0 ? height / 2 : 0
+        color: siteMouse.pressed ? Theme.pressed : siteMouse.containsMouse || siteInfo.open ? Theme.hover : "transparent"
 
         readonly property bool insecure: bar.parts.scheme === "http" && !input.activeFocus
 
-        Icon {
-            anchors.verticalCenter: parent.verticalCenter
-            name: input.activeFocus || bar.parts.scheme === "" ? "search"
-                : bar.parts.scheme === "https" ? "settings-2" : "triangle-alert"
-            color: site.insecure ? Theme.muted : Theme.foreground
+        Behavior on color { ColorAnimation { duration: Theme.duration / 2 } }
+
+        Row {
+            id: siteRow
+            anchors.centerIn: parent
+            spacing: 6
+
+            Icon {
+                anchors.verticalCenter: parent.verticalCenter
+                name: input.activeFocus || bar.parts.scheme === "" ? "search"
+                    : bar.parts.scheme === "https" ? "settings-2" : "triangle-alert"
+                color: site.insecure ? Theme.muted : Theme.foreground
+            }
+
+            UiText {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: site.insecure
+                text: "Not secure!"
+                color: Theme.muted
+            }
         }
 
-        UiText {
-            anchors.verticalCenter: parent.verticalCenter
-            visible: site.insecure
-            text: "Not secure"
-            color: Theme.muted
+        MouseArea {
+            id: siteMouse
+            anchors.fill: parent
+            enabled: bar.parts.scheme !== "" && !input.activeFocus
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: siteInfo.open = !siteInfo.open
         }
+    }
+
+    SiteInfo {
+        id: siteInfo
+        anchorItem: site
     }
 
     TextInput {
         id: input
-        anchors { left: site.right; leftMargin: 10; right: parent.right; rightMargin: 14; top: parent.top; bottom: parent.bottom }
+        anchors { left: site.right; leftMargin: 4; right: parent.right; rightMargin: 14; top: parent.top; bottom: parent.bottom }
         verticalAlignment: TextInput.AlignVCenter
         clip: true
         selectByMouse: true
@@ -103,6 +128,7 @@ Rectangle {
         }
         onActiveFocusChanged: {
             if (activeFocus) {
+                siteInfo.open = false
                 Qt.callLater(input.selectAll)
             } else {
                 bar.typing = false

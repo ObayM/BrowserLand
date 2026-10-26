@@ -345,6 +345,20 @@ ${rule.source}
         permissionRequests = permissionRequests.filter(r => r !== request)
     }
 
+    function clearSiteData(view) {
+        cookies.clear(hostOf(view.url))
+        view.runJavaScript(
+            `(async () => {
+                try { localStorage.clear() } catch (error) {}
+                try { sessionStorage.clear() } catch (error) {}
+                try { for (const db of await indexedDB.databases()) indexedDB.deleteDatabase(db.name) } catch (error) {}
+                try { for (const key of await caches.keys()) await caches.delete(key) } catch (error) {}
+                try { for (const worker of await navigator.serviceWorker.getRegistrations()) await worker.unregister() } catch (error) {}
+                location.reload()
+            })()`
+    , WebEngineScript.ApplicationWorld)
+    }
+
     function clearDownloads() {
         downloads = downloads.filter(download => !download.isFinished)
     }
@@ -411,6 +425,10 @@ ${rule.source}
         storageName: "default"
         persistentStoragePath: System.dataDir + "/profile"
         persistentPermissionsPolicy: WebEngineProfile.PersistentPermissionsPolicy.StoreOnDisk
+    }
+
+    property Cookies cookies: Cookies {
+        profile: browser.profile
     }
 
     onDownloadDirChanged: if (profile) profile.downloadPath = downloadDir
