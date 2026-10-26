@@ -65,6 +65,7 @@ qt_add_qml_module(browserland
         qml/singletons/Browser.qml
         qml/singletons/Theme.qml
         qml/NewTabPage.qml
+        qml/TabSidebar.qml
 )
 
 target_include_directories(browserland PRIVATE src/config src/browser)

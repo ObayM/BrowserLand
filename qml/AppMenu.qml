@@ -38,7 +38,9 @@ IconButton {
                     { text: "Developer tools", action: "devtools" },
                     { text: "Reload config", action: "reload-config" },
                     { separator: true },
-                    { text: "Quit", action: "quit" }
+                    { text: "Quit", action: "quit" },
+
+                    { text: Browser.verticalTabs ? "Horizontal tabs" : "Vertical tabs", action: "toggle-tabs" }
                 ]
 
                 delegate: Item {

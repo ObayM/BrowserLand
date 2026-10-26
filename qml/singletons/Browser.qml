@@ -14,6 +14,7 @@ QtObject {
 
     property Item pool: null
     property bool started: false
+    property bool verticalTabs: Config.appearance.tabs === "vertical"
     readonly property string newTabUrl: "about:blank#newtab"
 
     property WebEngineProfile profile: null
@@ -53,7 +54,9 @@ QtObject {
         "exec": args => System.exec(args || ""),
         "clear-history": () => History.clear(),
         "reload-config": () => Config.reload(),
-        "quit": () => { browser.saveSession(); Qt.quit() }
+        "quit": () => { browser.saveSession(); Qt.quit() },
+
+        "toggle-tabs": () => browser.verticalTabs = !browser.verticalTabs
     })
 
     readonly property var bindErrors: Array.from(Config.binds)
@@ -435,6 +438,7 @@ ${rule.source}
         target: Config
 
         function onReloaded() {
+            browser.verticalTabs = Config.appearance.tabs === "vertical"
             browser.applyUserScripts()
             for (const view of browser.tabs)
                 view.applySiteZoom(true)
