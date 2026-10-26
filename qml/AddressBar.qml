@@ -139,6 +139,17 @@ Rectangle {
         onClicked: Browser.run("bookmark")
     }
 
+    TextButton {
+        id: zoomBadge
+        readonly property real zoom: Browser.current ? Browser.current.zoomFactor : 1
+        anchors { right: star.visible ? star.left : parent.right; rightMargin: 2; verticalCenter: parent.verticalCenter}
+        implicitHeight: 24
+
+        text: Math.round(zoom * 100) + "%"
+        visible: Math.abs(zoom - 1) > 0.001 && !input.activeFocus
+        onClicked: Browser.run("zoom-reset")
+    }
+
     BookmarkEditor {
         id: bookmarkEditor
         anchorItem: star
@@ -146,7 +157,7 @@ Rectangle {
 
     TextInput {
         id: input
-        anchors { left: site.right; leftMargin: 4; right: star.visible ? star.left : parent.right; rightMargin: star.visible ? 2 : 14; top: parent.top; bottom: parent.bottom }
+        anchors { left: site.right; leftMargin: 4; right: zoomBadge.visible ? zoomBadge.left : star.visible ? star.left : parent.right; rightMargin: star.visible ? 2 : 14; top: parent.top; bottom: parent.bottom }
         verticalAlignment: TextInput.AlignVCenter
         clip: true
         selectByMouse: true
