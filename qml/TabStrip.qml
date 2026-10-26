@@ -494,7 +494,7 @@ Rectangle {
                         anchors {
                             left: parent.left
                             leftMargin: 24
-                            right: closeButton.visible ? closeButton.left : parent.right
+                            right: audio.visible ? audio.left : closeButton.visible ? closeButton.left : parent.right
                             rightMargin: 4
                             verticalCenter: parent.verticalCenter
                         }
@@ -518,6 +518,18 @@ Rectangle {
                                 GradientStop { position: 1; color: tab.fill }
                             }
                         }
+                    }
+
+                    IconButton {
+                        id: audio
+                        anchors { right: closeButton.visible ? closeButton.left : parent.right; verticalCenter: parent.verticalCenter }
+                        implicitHeight: 20
+                        implicitWidth: 20
+                        iconSize: 12
+                        tip: tab.view && tab.view.audioMuted? "Unmute tab" : "Mute tab" 
+                        icon: tab.view && tab.view.audioMuted? "volume-x" : "volume-2"
+                        visible: !tab.compact && !!tab.view && (tab.view.recentlyAudible || tab.view.audioMuted)
+                        onClicked: tab.view.audioMuted = !tab.view.audioMuted
                     }
 
                     IconButton {
