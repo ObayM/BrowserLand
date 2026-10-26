@@ -27,6 +27,7 @@ Rectangle {
                 ],
                 [
                     { text: Browser.verticalTabs ? "Horizontal tabs" : "Vertical tabs", run: () => Browser.run("toggle-tabs") },
+                    { text: Browser.bookmarksBar ? "Hide bookmarks bar" : "Show bookmarks bar", run: () => Browser.run("toggle-bookmarks-bar") },
                     { text: "Reload config", run: () => Browser.run("reload-config") },
                     { text: "Open config file", run: () => Qt.openUrlExternally("file://" + Config.configFile) }
                 ]
@@ -83,6 +84,11 @@ Rectangle {
                 WidgetSlot { name: "toolbar-right" }
 
                 AppMenu {}
+            }
+
+            BookmarksBar {
+                Layout.fillWidth: true
+                visible: Browser.bookmarksBar || (!!Browser.current && Browser.current.newTabPage && Bookmarks.items.length > 0)
             }
 
             Rectangle {

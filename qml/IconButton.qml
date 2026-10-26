@@ -7,6 +7,8 @@ Rectangle {
     property alias text: label.text
     property alias icon: glyph.name
     property real iconSize: 18
+    property alias iconColor: glyph.color
+    property alias iconFill: glyph.fill
     property string tip
     property bool tipShown: false
     signal clicked()

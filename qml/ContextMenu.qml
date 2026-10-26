@@ -43,7 +43,9 @@ Item {
                 { text: "Open link in new tab", run: act(WebEngineView.OpenLinkInNewTab) },
                 { text: "Download link", run: act(WebEngineView.DownloadLinkToDisk) },
                 { text: "Copy link address", run: act(WebEngineView.CopyLinkToClipboard) },
-                { text: "Copy link as Markdown", run: () => copyText("[" + request.linkText + "](" + link + ")") }
+                { text: "Copy link as Markdown", run: () => copyText("[" + request.linkText + "](" + link + ")") },
+                Bookmarks.has(link) ? { text: "Remove bookmark", run: () => Bookmarks.remove(link) }
+                                    : { text: "Bookmark link", run: () => Bookmarks.add(link, request.linkText, "") }
             ])
 
         if (request.mediaType === ContextMenuRequest.MediaTypeImage)
@@ -111,7 +113,8 @@ Item {
                 { text: "Save page", run: act(WebEngineView.SavePage) },
                 { text: "Select all", run: act(WebEngineView.SelectAll) },
                 { text: "View page source", run: act(WebEngineView.ViewSource) },
-                { text: "Duplicate tab", run: () => Browser.newTab(view.url.toString()) }
+                { text: "Duplicate tab", run: () => Browser.newTab(view.url.toString()) },
+                { text: Bookmarks.has(view.url) ? "Edit bookmark" : "Bookmark page", shortcut: bound("bookmark"), run: () => Browser.run("bookmark") }
             ])
         }
 
@@ -128,7 +131,8 @@ Item {
         const point = item.mapToItem(menu, x, y)
         
         panel.x = point.x + panel.width > width - 4 ? Math.max(4, point.x - panel.width) : point.x
-        panel.y = point.y + contentHeight > height - 4 ? Math.max(4, point.y - contentHeight) : point.y
+        panel.y = point.y + panel.height > height - 4 ? Math.max(4, point.y - panel.height) : point.y
+        flick.contentY = 0
         open = true
     }
 
@@ -171,7 +175,7 @@ Item {
         id: panel
 
         width: 260
-        height: menu.contentHeight
+        height: Math.min(menu.contentHeight, menu.height - 8)
         radius: Theme.radius
         color: Theme.overlay
         border.width: 1
@@ -182,66 +186,77 @@ Item {
             acceptedButtons: Qt.AllButtons
         }
 
-        Column {
-            id: column
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 6 }
+        Flickable {
+            id: flick
+            anchors.fill: parent
+            contentHeight: menu.contentHeight
+            clip: true
+            interactive: contentHeight > height
+            boundsBehavior: Flickable.StopAtBounds
 
-            Repeater {
-                model: menu.items
+            Column {
+                id: column
+                x: 6
+                y: 6
+                width: flick.width - 12
 
-                delegate: Item {
-                    id: entry
+                Repeater {
+                    model: menu.items
 
-                    required property var modelData
-                    required property int index
+                    delegate: Item {
+                        id: entry
 
-                    width: column.width
-                    height: modelData.separator ? 9 : 30
-                    enabled: modelData.enabled !== false
-                    opacity: enabled ? 1 : 0.35
+                        required property var modelData
+                        required property int index
 
-                    Rectangle {
-                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 8 }
-                        height: 1
-                        color: Theme.border
-                        visible: !!entry.modelData.separator
-                    }
+                        width: column.width
+                        height: modelData.separator ? 9 : 30
+                        enabled: modelData.enabled !== false
+                        opacity: enabled ? 1 : 0.35
 
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: Theme.radiusSmall
-                        color: rowMouse.containsMouse ? Theme.hover : "transparent"
-                        visible: !entry.modelData.separator
-
-                        UiText {
-                            anchors { left: parent.left; leftMargin: 12; right: hint.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
-                            text: entry.modelData.text || ""
-                            elide: Text.ElideRight
+                        Rectangle {
+                            anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 8 }
+                            height: 1
+                            color: Theme.border
+                            visible: !!entry.modelData.separator
                         }
 
-                        UiText {
-                            id: hint
-                            anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
-                            text: entry.modelData.shortcut || ""
-                            color: Theme.muted
-                            font.pixelSize: Theme.fontSizeSmall
-                        }
-
-                        Icon {
-                            anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
-                            name: "check"
-                            size: 14
-                            visible: !!entry.modelData.checked
-                        }
-
-                        MouseArea {
-                            id: rowMouse
+                        Rectangle {
                             anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
-                            onClicked: {
-                                menu.open = false
-                                menu.items[entry.index].run()
+                            radius: Theme.radiusSmall
+                            color: rowMouse.containsMouse ? Theme.hover : "transparent"
+                            visible: !entry.modelData.separator
+
+                            UiText {
+                                anchors { left: parent.left; leftMargin: 12; right: hint.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                                text: entry.modelData.text || ""
+                                elide: Text.ElideRight
+                            }
+
+                            UiText {
+                                id: hint
+                                anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                                text: entry.modelData.shortcut || ""
+                                color: Theme.muted
+                                font.pixelSize: Theme.fontSizeSmall
+                            }
+
+                            Icon {
+                                anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                                name: "check"
+                                size: 14
+                                visible: !!entry.modelData.checked
+                            }
+
+                            MouseArea {
+                                id: rowMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onClicked: {
+                                    menu.open = false
+                                    menu.items[entry.index].run()
+                                }
                             }
                         }
                     }

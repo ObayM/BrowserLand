@@ -27,7 +27,7 @@ qt_add_executable(browserland
     src/browser/Remote.cpp
     src/browser/Remote.h
 )
-set_source_files_properties(qml/singletons/Browser.qml qml/singletons/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/singletons/Browser.qml qml/singletons/Theme.qml qml/singletons/Bookmarks.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_qml_module(browserland
     URI BrowserLand
@@ -70,6 +70,9 @@ qt_add_qml_module(browserland
         qml/TabSidebar.qml
         qml/SiteInfo.qml
         qml/ContextMenu.qml
+        qml/singletons/Bookmarks.qml
+        qml/BookmarksBar.qml
+        qml/BookmarkEditor.qml
 )
 
 target_include_directories(browserland PRIVATE src/config src/browser)

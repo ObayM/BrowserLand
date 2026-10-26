@@ -8,6 +8,7 @@ Item {
     property string name
     property color color: Theme.foreground
     property real size: 16
+    property color fill: "transparent"
 
     readonly property var paths: ({
         "arrow-left": "M12 19l-7-7 7-7M19 12H5",
@@ -15,6 +16,8 @@ Item {
         "rotate-cw": "M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8M21 3v5h-5",
         "x": "M18 6 6 18M6 6l12 12",
         "check": "M20 6L9 17l-5-5",
+        "star": "M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14L2 9.27l6.91-1.01z",
+        "chevrons-right": "M6 17l5-5-5-5M13 17l5-5-5-5",
         "plus": "M5 12h14M12 5v14",
         "download": "M12 15V3M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5",
         "chevron-up": "M18 15l-6-6-6 6",
@@ -52,7 +55,7 @@ Item {
         ShapePath {
             strokeColor: icon.color
             strokeWidth: 2
-            fillColor: "transparent"
+            fillColor: icon.fill
             capStyle: ShapePath.RoundCap
             joinStyle: ShapePath.RoundJoin
 

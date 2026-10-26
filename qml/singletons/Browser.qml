@@ -15,6 +15,7 @@ QtObject {
     property Item pool: null
     property bool started: false
     property bool verticalTabs: Config.appearance.tabs === "vertical"
+    property bool bookmarksBar: Config.appearance.bookmarks_bar === true
     readonly property string newTabUrl: "about:blank#newtab"
 
     property WebEngineProfile profile: null
@@ -33,6 +34,7 @@ QtObject {
     signal contextMenuRequested(var view, var request)
     signal menuRequested(var sections, var item, real x, real y)
     signal inspectRequested()
+    signal bookmarkRequested(string url, bool added)
 
     readonly property var actions: ({
         "new-tab": args => { browser.newTab(args || undefined); if (!args) browser.focusUrlRequested() },
@@ -60,7 +62,9 @@ QtObject {
         "reload-config": () => Config.reload(),
         "quit": () => { browser.saveSession(); Qt.quit() },
 
-        "toggle-tabs": () => browser.verticalTabs = !browser.verticalTabs
+        "toggle-tabs": () => browser.verticalTabs = !browser.verticalTabs,
+        "toggle-bookmarks-bar": () => browser.bookmarksBar = !browser.bookmarksBar,
+        "bookmark": () => browser.bookmarkCurrent()
     })
 
     readonly property var bindErrors: Array.from(Config.binds)
@@ -160,6 +164,20 @@ QtObject {
             return
         closedTabs = closedTabs.slice(0, -1)
         newTab(last.url, false, last.index)
+    }
+
+    function bookmarkCurrent() {
+        if (!current || current.newTabPage)
+            return
+        const url = current.url.toString()
+        
+        if (url === "" || url === "about:blank")
+            return
+        const added = !Bookmarks.has(url)
+
+        if (added)
+            Bookmarks.add(url, current.title, current.icon)
+        bookmarkRequested(url, added)
     }
 
     function selectTab(index) {
@@ -461,6 +479,7 @@ ${rule.source}
 
         function onReloaded() {
             browser.verticalTabs = Config.appearance.tabs === "vertical"
+            browser.bookmarksBar = Config.appearance.bookmarks_bar === true
             browser.applyUserScripts()
             for (const view of browser.tabs)
                 view.applySiteZoom(true)
@@ -521,12 +540,16 @@ ${rule.source}
                 browser.scheduleSave()
             }
             onTitleChanged: browser.scheduleSave()
-            onIconChanged: History.setIcon(url, icon)
+            onIconChanged: {
+                History.setIcon(url, icon)
+                Bookmarks.refresh(url, title, icon)
+            }
 
             onLoadingChanged: info => {
                 if (info.status === WebEngineLoadingInfo.LoadSucceededStatus) {
                     view.thumbnailTimer.restart()
                     History.add(info.url, view.title, view.icon)
+                    Bookmarks.refresh(info.url, view.title, view.icon)
                 }
             }
 

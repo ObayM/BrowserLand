@@ -31,6 +31,12 @@ Rectangle {
         return { scheme: match[1].toLowerCase(), host: match[2], rest }
     }
 
+    function suggest(text) {
+        const marked = Bookmarks.search(text, 3)
+        const urls = marked.map(item => item.url)
+        return marked.concat(History.search(text, 6).filter(item => !urls.includes(item.url))).slice(0, 6)
+    }
+
     implicitHeight: 34
     radius: Theme.radius > 0 ? height / 2 : 0
     bottomLeftRadius: dropdown.open ? 0 : radius
@@ -115,9 +121,32 @@ Rectangle {
         anchorItem: site
     }
 
+    IconButton {
+        id: star
+
+        readonly property bool marked: Bookmarks.has(bar.pageUrl)
+
+        anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
+        implicitWidth: 28
+        implicitHeight: 28
+        iconSize: 16
+
+        icon: "star"
+        iconColor: marked ? Theme.accent : Theme.foreground
+        iconFill: marked ? Theme.accent : "transparent"
+        tip: marked ? "Edit bookmark" : "Bookmark this page"
+        visible: bar.pageUrl !== "" && bar.pageUrl !== "about:blank"
+        onClicked: Browser.run("bookmark")
+    }
+
+    BookmarkEditor {
+        id: bookmarkEditor
+        anchorItem: star
+    }
+
     TextInput {
         id: input
-        anchors { left: site.right; leftMargin: 4; right: parent.right; rightMargin: 14; top: parent.top; bottom: parent.bottom }
+        anchors { left: site.right; leftMargin: 4; right: star.visible ? star.left : parent.right; rightMargin: star.visible ? 2 : 14; top: parent.top; bottom: parent.bottom }
         verticalAlignment: TextInput.AlignVCenter
         clip: true
         selectByMouse: true
@@ -130,7 +159,7 @@ Rectangle {
         onTextEdited: {
             bar.typing = true
             bar.selected = -1
-            bar.suggestions = text.trim() !== "" ? History.search(text, 6) : []
+            bar.suggestions = text.trim() !== "" ? bar.suggest(text) : []
         }
         onAccepted: bar.go(bar.selected >= 0 ? bar.suggestions[bar.selected].url : text)
 
@@ -219,7 +248,7 @@ Rectangle {
                     Icon {
                         id: rowIcon
                         anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
-                        name: "history"
+                        name: row.modelData.bookmark ? "star" : "history"
                         color: Theme.muted
                     }
 
@@ -257,5 +286,6 @@ Rectangle {
             input.forceActiveFocus()
             input.selectAll()
         }
+        function onBookmarkRequested(url, added) { bookmarkEditor.edit(star, url, added) }
     }
 }
