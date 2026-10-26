@@ -496,6 +496,14 @@ ${rule.source}
                 onTriggered: view.captureThumbnail()
             }
 
+            property Timer sleepTimer: Timer {
+                interval: (Config.general.sleep_tabs_after || 1) * 60000
+
+                running: Config.general.sleep_tabs_after > 0 && view.lifecycleState !== view.recommendedState
+                
+                onTriggered: view.lifecycleState = view.recommendedState
+            }
+
             property string pendingUrl: ""
             property string pendingTitle: ""
             readonly property bool newTabPage: (url.toString() || pendingUrl) === browser.newTabUrl
