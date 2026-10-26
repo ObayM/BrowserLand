@@ -62,13 +62,19 @@ Window {
     Shortcut {
         sequence: "Esc"
         context: Qt.ApplicationShortcut
-        enabled: !!Browser.fullScreenView
+        enabled: !!Browser.fullScreenView && !contextMenu.open
         onActivated: Browser.exitFullScreen()
     }
 
     NotificationToast {
         anchors { right: parent.right; bottom: parent.bottom; margins: 16 }
         z: 95
+    }
+
+    ContextMenu {
+        id: contextMenu
+        anchors.fill: parent
+        z: 97
     }
 
     Window {
@@ -86,6 +92,12 @@ Window {
     Connections {
         target: Browser
         function onDevToolsRequested() { devTools.visible = !devTools.visible }
+
+        function onInspectRequested() {
+            devTools.visible = true
+            devTools.raise()
+            Browser.current.triggerWebAction(WebEngineView.InspectElement)
+        }
 
         function onFullScreenViewChanged() {
             const view = Browser.fullScreenView

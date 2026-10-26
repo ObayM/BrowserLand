@@ -30,6 +30,9 @@ QtObject {
     signal findRequested()
     signal notificationPresented(var notification)
 
+    signal contextMenuRequested(var view, var request)
+    signal inspectRequested()
+
     readonly property var actions: ({
         "new-tab": args => { browser.newTab(args || undefined); if (!args) browser.focusUrlRequested() },
         "close-tab": () => browser.closeTab(browser.currentIndex),
@@ -537,6 +540,11 @@ ${rule.source}
             }
 
             onPermissionRequested: permission => browser.requestPermission(view, permission)
+
+            onContextMenuRequested: request => {
+                request.accepted = true
+                browser.contextMenuRequested(view, request)
+            }
 
             onNewWindowRequested: request => {
                 const background = request.destination === WebEngineNewWindowRequest.InNewBackgroundTab

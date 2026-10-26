@@ -69,6 +69,7 @@ qt_add_qml_module(browserland
         qml/NewTabPage.qml
         qml/TabSidebar.qml
         qml/SiteInfo.qml
+        qml/ContextMenu.qml
 )
 
 target_include_directories(browserland PRIVATE src/config src/browser)
