@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import QtWebEngine
 import BrowserLand
+import QtCore
 
 
 QtObject {
@@ -226,11 +227,13 @@ QtObject {
                 return engine.replace("{}", encodeURIComponent(input.slice(space + 1).trim()))
         }
 
+        if (/^~?\//.test(input))
+            return (input.startsWith("~") ? StandardPaths.writableLocation(StandardPaths.HomeLocation) : "file://") + input.replace(/^~/, "")
         if (/^(localhost|\d+\.\d+\.\d+\.\d+)(:\d+)?(\/\S*)?$/.test(input))
             return "http://" + input
-        if (/^[\w-]+(\.[\w-]+)+(:\d+)?(\/\S*)?$/.test(input))
+        if (/^[\w-]+(\.[\w-]+)*\.[a-z][\w-]*(:\d+)?(\/\S*)?$/i.test(input))
             return "https://" + input
-        if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\S*$/.test(input))
+        if (/^([a-z][a-z0-9+.-]*:\/\/|(about|data|mailto|view-source|chrome):)\S*$/i.test(input))
             return input
 
         return Config.general.search_url.replace("{}", encodeURIComponent(input))

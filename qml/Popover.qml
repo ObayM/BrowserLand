@@ -51,5 +51,6 @@ Rectangle {
         enabled: popover.open && popover.closeOnOutsideClick
         visible: enabled
         onPressed: popover.open = false
+        acceptedButtons: Qt.AllButtons
     }
 }
