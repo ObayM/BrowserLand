@@ -1,5 +1,7 @@
 # BrowserLand
 
+![BrowserLand's new tab page](assets/screenshot.png)
+
 This is a browser that gives you the ability to customize everything. It should work on Linux perfectly fine!
 
 It's fast and have a customizable, easy-to-learn language where you can write just like you do with Hyprland and Quickshell. For example, you can add your own widgets and UI elements, and change anything.

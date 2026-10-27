@@ -9,8 +9,8 @@ Rectangle {
     property var sites: []
     property int today: 0
 
-    readonly property int tileSize: 96
-    readonly property int fits: Math.max(1, Math.floor((width - 64) / (tileSize + 14)))
+    readonly property int tileSize: 56
+    readonly property int fits: Math.max(1, Math.floor((width - 96) / (tileSize + 6)))
     
     function refresh (){
         now = new Date()
@@ -76,8 +76,10 @@ Rectangle {
     }
 
     Column {
+        id: center
         anchors.centerIn: parent
         anchors.verticalCenterOffset: -30
+        spacing: 40
 
         Column {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -103,58 +105,133 @@ Rectangle {
             }
         }
 
-        Row {
+        Item {
+            id: dock
+
             anchors.horizontalCenter: parent.horizontalCenter
-            topPadding: 44
-            spacing: 14
+            width: sitesRow.width + 20
+            height: sitesRow.height + 20
+            visible: page.sites.length > 0
 
-            Repeater {
-                model: page.sites.slice(0, page.fits)
+            RectangularShadow {
+                anchors.fill: parent
+                radius: glass.radius
+                blur: 30
+                offset.y: 10
+                color: Qt.rgba(0, 0, 0, 0.35)
+            }
 
-                delegate: Rectangle {
-                    id: tile
+            ShaderEffectSource {
+                id: behind
+                anchors.fill: parent
+                sourceItem: wallpaper
+                sourceRect: Qt.rect(center.x + dock.x, center.y + dock.y, dock.width, dock.height)
+                visible: false
+            }
 
-                    required property var modelData
+            Rectangle {
+                id: shape
+                anchors.fill: parent
+                radius: glass.radius
+                layer.enabled: true
+                visible: false
+            }
 
-                    width: page.tileSize
-                    height: page.tileSize
-                    radius: Theme.radius * 1.5
-                    color: Theme.alpha(Theme.raised, mouse.containsMouse ? 0.9 : 0.6)
-                    border.color: Theme.border
+            MultiEffect {
+                anchors.fill: parent
+                source: behind
+                visible: wallpaper.status === Image.Ready
+                autoPaddingEnabled: false
+                blurEnabled: true
+                blur: 1
+                blurMax: 48
+                saturation: 0.2
+                maskEnabled: true
+                maskSource: shape
+                maskThresholdMin: 0.5
+                maskSpreadAtMin: 1
+            }
 
-                    Behavior on color { ColorAnimation { duration: Theme.duration } }
+            Rectangle {
+                id: glass
+                anchors.fill: parent
+                radius: Theme.radius * 3
+                border.color: Theme.alpha(Theme.foreground, 0.14)
+                gradient: Gradient {
+                    GradientStop { position: 0; color: Theme.alpha(Theme.raised, 0.55) }
+                    GradientStop { position: 1; color: Theme.alpha(Theme.background, 0.45) }
+                }
+            }
 
-                    Image {
-                        id: favicon
-                        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 20 }
-                        width: 32
-                        height: 32
-                        sourceSize: Qt.size(32, 32)
-                        source: tile.modelData.icon
-                    }
+            Row {
+                id: sitesRow
+                anchors.centerIn: parent
+                spacing: 6
 
-                    UiText {
-                        anchors.centerIn: favicon
-                        visible: favicon.status !== Image.Ready
-                        text: Browser.hostOf(tile.modelData.url).replace(/^www\./, "").charAt(0).toUpperCase()
-                        font.pixelSize: 22
-                        font.weight: Font.DemiBold
-                    }
+                Repeater {
+                    model: page.sites.slice(0, page.fits)
 
-                    UiText {
-                        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 10 }
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideRight
-                        text: tile.modelData.title || Browser.hostOf(tile.modelData.url)
-                        font.pixelSize: Theme.fontSizeSmall
-                    }
+                    delegate: Item {
+                        id: tile
 
-                    MouseArea {
-                        id: mouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Browser.navigate(tile.modelData.url)
+                        required property var modelData
+
+                        width: page.tileSize
+                        height: page.tileSize
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Theme.radius * 2
+                            color: mouse.pressed ? Theme.pressed : Theme.hover
+                            opacity: mouse.containsMouse ? 1 : 0
+
+                            Behavior on opacity { NumberAnimation { duration: Theme.duration } }
+                        }
+
+                        Item {
+                            anchors.centerIn: parent
+                            width: 32
+                            height: 32
+                            scale: mouse.containsMouse ? 1.18 : 1
+
+                            Behavior on scale { NumberAnimation { duration: Theme.duration * 1.5; easing.type: Easing.OutBack } }
+
+                            Image {
+                                id: favicon
+                                anchors.fill: parent
+                                sourceSize: Qt.size(64, 64)
+                                source: tile.modelData.icon
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: width / 2
+                                visible: favicon.status !== Image.Ready
+                                color: Theme.alpha(Theme.accent, 0.2)
+
+                                UiText {
+                                    anchors.centerIn: parent
+                                    text: Browser.hostOf(tile.modelData.url).replace(/^www\./, "").charAt(0).toUpperCase()
+                                    color: Theme.accent
+                                    font.pixelSize: 16
+                                    font.weight: Font.DemiBold
+                                }
+                            }
+                        }
+
+                        MouseArea {
+                            id: mouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Browser.navigate(tile.modelData.url)
+                        }
+
+                        Tooltip {
+                            target: tile
+                            text: tile.modelData.title || Browser.hostOf(tile.modelData.url)
+                            show: mouse.containsMouse
+                        }
                     }
                 }
             }
